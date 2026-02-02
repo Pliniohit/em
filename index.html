@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Diretor AR - Visualizador de Palco</title>
+    <!-- Bibliotecas essenciais -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: white; margin: 0; overflow: hidden; height: 100vh; }
+        
+        model-viewer {
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            --ar-button-display: none; 
+        }
+
+        .glass { 
+            background: rgba(10, 10, 10, 0.9); 
+            backdrop-filter: blur(25px); 
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (min-width: 1024px) {
+            .glass { border-top: none; border-left: 1px solid rgba(255, 255, 255, 0.1); }
+        }
+
+        .tab-active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        
+        /* Estilo para sliders */
+        input[type="range"] { height: 6px; appearance: none; background: #333; border-radius: 3px; width: 100%; }
+        input[type="range"]::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; background: #3b82f6; border-radius: 50%; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+
+        #ar-button-main {
+            background: #fff; color: #000; border-radius: 50px; padding: 16px 32px;
+            font-weight: 700; position: absolute; bottom: 40px; left: 50%;
+            transform: translateX(-50%); z-index: 50;
+            display: flex; align-items: center; gap: 12px; 
+            box-shadow: 0 15px 45px rgba(0,0,0,0.9);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #ar-button-main:active { transform: translateX(-50%) scale(0.9); }
+        #ar-button-main:disabled { background: #222; color: #555; cursor: not-allowed; box-shadow: none; }
+
+        .sidebar-container { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+</head>
+<body class="flex flex-col lg:flex-row-reverse">
+
+    <!-- Notificação de Erro/Status -->
+    <div id="status-toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl bg-red-600 text-white text-sm font-medium shadow-2xl hidden animate-bounce">
+        Ligação segura (HTTPS) necessária para a câmara.
+    </div>
+
+    <!-- Botão Principal de AR -->
+    <button id="ar-button-main" onclick="tryActivateAR()" disabled>
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span id="ar-btn-text">AGUARDANDO FICHEIRO</span>
+    </button>
+
+    <!-- Barra Lateral de Controlo -->
+    <aside id="sidebar" class="sidebar-container fixed inset-x-0 bottom-0 lg:relative lg:inset-auto lg:w-96 h-[65vh] lg:h-screen glass z-40 translate-y-full lg:translate-y-0 flex flex-col shadow-2xl">
+        
+        <!-- Puxador Mobile -->
+        <div onclick="toggleSidebar()" class="lg:hidden w-full flex justify-center py-4 cursor-pointer">
+            <div class="w-16 h-1.5 bg-white/20 rounded-full"></div>
+        </div>
+
+        <!-- Abas (Tabs) -->
+        <div class="flex border-b border-white/5 text-[11px] font-bold uppercase tracking-widest px-4">
+            <button onclick="switchTab('lib')" id="tab-lib" class="flex-1 py-5 tab-active">Cenários</button>
+            <button onclick="switchTab('insp')" id="tab-insp" class="flex-1 py-5 text-gray-500">Inspetor</button>
+        </div>
+
+        <!-- Conteúdo: Biblioteca -->
+        <div id="view-lib" class="p-6 flex flex-col flex-1 overflow-hidden">
+            <input type="file" id="upload-input" accept=".glb,.gltf" class="hidden" multiple>
+            <label for="upload-input" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-4 rounded-2xl cursor-pointer transition-all mb-8 text-center shadow-xl flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                IMPORTAR DO SKETCHUP
+            </label>
+            
+            <div id="file-list" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scroll">
+                <p class="text-gray-600 text-xs text-center py-10 leading-relaxed italic">Carregue o cenário exportado em .glb para visualizar na sala de ensaio.</p>
+            </div>
+        </div>
+
+        <!-- Conteúdo: Inspetor -->
+        <div id="view-insp" class="hidden p-6 flex flex-col flex-1 overflow-hidden">
+            <div id="scene-tree" class="flex-1 overflow-y-auto space-y-1 mb-6 text-xs bg-black/40 p-4 rounded-2xl border border-white/5 custom-scroll">
+                <span class="text-gray-600 italic">Selecione um cenário primeiro...</span>
+            </div>
+
+            <!-- Painel de Transformação -->
+            <div id="edit-panel" class="space-y-6 border-t border-white/10 pt-6 opacity-25 pointer-events-none">
+                <div class="flex justify-between items-center">
+                    <h3 id="target-name" class="text-sm font-bold text-blue-400 truncate pr-4">Nenhum objeto</h3>
+                    <button onclick="resetObj()" class="text-[10px] bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/20 transition-colors">REPOR</button>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="space-y-3">
+                        <label class="text-[10px] text-gray-400 uppercase tracking-widest flex justify-between">Horizontal (X) <span id="val-x" class="text-blue-500">0.0</span></label>
+                        <input type="range" id="input-x" min="-20" max="20" step="0.05" value="0">
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[10px] text-gray-400 uppercase tracking-widest flex justify-between">Profundidade (Z) <span id="val-z" class="text-blue-500">0.0</span></label>
+                        <input type="range" id="input-z" min="-20" max="20" step="0.05" value="0">
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[10px] text-gray-400 uppercase tracking-widest flex justify-between">Rotação <span id="val-r" class="text-blue-500">0°</span></label>
+                        <input type="range" id="input-r" min="0" max="360" value="0">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Ícone de Menu Mobile -->
+    <button onclick="toggleSidebar()" class="lg:hidden fixed top-6 right-6 z-50 bg-black/60 backdrop-blur-lg p-4 rounded-2xl border border-white/10">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+    </button>
+
+    <!-- Visualizador 3D -->
+    <main class="flex-1 relative h-screen">
+        <model-viewer 
+            id="v"
+            src="" 
+            ar 
+            ar-modes="webxr scene-viewer quick-look" 
+            camera-controls 
+            ar-placement="floor"
+            shadow-intensity="2"
+            environment-image="neutral"
+            exposure="1"
+            touch-action="none">
+        </model-viewer>
+    </main>
+
+    <script>
+        const viewer = document.getElementById('v');
+        const uploadInput = document.getElementById('upload-input');
+        const fileList = document.getElementById('file-list');
+        const sceneTree = document.getElementById('scene-tree');
+        const editPanel = document.getElementById('edit-panel');
+        const sidebar = document.getElementById('sidebar');
+        const arBtn = document.getElementById('ar-button-main');
+        const arBtnText = document.getElementById('ar-btn-text');
+        const toast = document.getElementById('status-toast');
+        
+        let models = [];
+        let activeObj = null;
+        let sidebarOpen = false;
+
+        // Verificação de Segurança HTTPS
+        const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 5000);
+        }
+
+        if (!isSecure) {
+            showToast("Atenção: A AR requer HTTPS para abrir a câmara no iPhone.");
+        }
+
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            sidebar.style.transform = sidebarOpen ? 'translateY(0)' : 'translateY(100%)';
+            if(window.innerWidth >= 1024) sidebar.style.transform = 'none';
+        }
+
+        function switchTab(tab) {
+            document.getElementById('view-lib').classList.toggle('hidden', tab !== 'lib');
+            document.getElementById('view-insp').classList.toggle('hidden', tab !== 'insp');
+            document.getElementById('tab-lib').className = `flex-1 py-5 ${tab === 'lib' ? 'tab-active' : 'text-gray-500'}`;
+            document.getElementById('tab-insp').className = `flex-1 py-5 ${tab === 'insp' ? 'tab-active' : 'text-gray-500'}`;
+        }
+
+        async function tryActivateAR() {
+            if (!isSecure) {
+                showToast("Erro: HTTPS é obrigatório para aceder à câmara.");
+                return;
+            }
+
+            if (viewer.canActivateAR) {
+                viewer.activateAR();
+            } else {
+                showToast("A processar modelo para AR... Tente novamente em segundos.");
+            }
+        }
+
+        uploadInput.onchange = (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            arBtnText.textContent = "A CARREGAR...";
+            arBtn.disabled = true;
+
+            files.forEach(file => {
+                const url = URL.createObjectURL(file);
+                const item = { name: file.name, url: url, id: Date.now() };
+                models.push(item);
+                updateLibrary();
+                selectModel(item);
+            });
+        };
+
+        function updateLibrary() {
+            fileList.innerHTML = models.map(m => `
+                <div onclick="selectModelById(${m.id})" class="p-4 bg-white/5 rounded-2xl border ${viewer.src === m.url ? 'border-blue-500 bg-blue-500/10' : 'border-white/5'} hover:border-blue-500/50 cursor-pointer text-xs truncate transition-all flex justify-between items-center group">
+                    <span class="truncate pr-4">${m.name}</span>
+                    <div class="w-2 h-2 rounded-full ${viewer.src === m.url ? 'bg-blue-500 shadow-[0_0_10px_#3b82f6]' : 'bg-gray-700'} group-hover:bg-blue-400"></div>
+                </div>
+            `).join('');
+        }
+
+        function selectModelById(id) {
+            const m = models.find(x => x.id === id);
+            if(m) selectModel(m);
+        }
+
+        function selectModel(m) {
+            viewer.src = m.url;
+            activeObj = null;
+            editPanel.classList.add('opacity-25', 'pointer-events-none');
+            sceneTree.innerHTML = '<span class="text-blue-400 animate-pulse text-xs italic">A mapear estrutura 3D...</span>';
+            
+            viewer.addEventListener('load', () => {
+                arBtn.disabled = false;
+                arBtnText.textContent = "ABRIR CÂMARA (AR)";
+                updateLibrary();
+                setTimeout(buildSceneTree, 500);
+            }, { once: true });
+        }
+
+        function buildSceneTree() {
+            const sym = Symbol.for('threeScene');
+            const scene = viewer[sym];
+            if (!scene) return;
+
+            sceneTree.innerHTML = '';
+            let count = 0;
+
+            scene.traverse((node) => {
+                if (node.name && node.name.length > 2 && !node.name.includes("Scene") && !node.name.includes("Static")) {
+                    count++;
+                    const div = document.createElement('div');
+                    div.className = "p-3 hover:bg-blue-500/10 rounded-xl cursor-pointer transition-colors truncate mb-1 border-b border-white/5 last:border-0";
+                    div.textContent = node.name;
+                    div.onclick = (e) => { e.stopPropagation(); pickObj(node); };
+                    sceneTree.appendChild(div);
+                }
+            });
+
+            if (count === 0) {
+                sceneTree.innerHTML = '<p class="text-gray-600 text-[10px] text-center">Nenhum objeto nomeado encontrado. Agrupe no SketchUp para os poder mover aqui.</p>';
+            }
+        }
+
+        function pickObj(node) {
+            activeObj = node;
+            document.getElementById('target-name').textContent = node.name;
+            editPanel.classList.remove('opacity-25', 'pointer-events-none');
+            
+            document.getElementById('input-x').value = node.position.x;
+            document.getElementById('input-z').value = node.position.z;
+            document.getElementById('input-r').value = (node.rotation.y * 180 / Math.PI) % 360;
+            
+            syncLabels();
+
+            Array.from(sceneTree.children).forEach(c => {
+                const isSelected = c.textContent === node.name;
+                c.className = isSelected ? "p-3 bg-blue-600/30 text-blue-200 rounded-xl cursor-pointer truncate mb-1" : "p-3 hover:bg-blue-500/10 rounded-xl cursor-pointer transition-colors truncate mb-1 border-b border-white/5 last:border-0";
+            });
+
+            if(window.innerWidth < 1024) switchTab('insp');
+        }
+
+        function syncLabels() {
+            if(!activeObj) return;
+            document.getElementById('val-x').textContent = parseFloat(activeObj.position.x).toFixed(2);
+            document.getElementById('val-z').textContent = parseFloat(activeObj.position.z).toFixed(2);
+            document.getElementById('val-r').textContent = Math.round(activeObj.rotation.y * 180 / Math.PI) + "°";
+        }
+
+        const applyTransform = () => {
+            if (!activeObj) return;
+            activeObj.position.x = parseFloat(document.getElementById('input-x').value);
+            activeObj.position.z = parseFloat(document.getElementById('input-z').value);
+            activeObj.rotation.y = (parseFloat(document.getElementById('input-r').value) * Math.PI) / 180;
+            syncLabels();
+        };
+
+        ['input-x', 'input-z', 'input-r'].forEach(id => {
+            document.getElementById(id).addEventListener('input', applyTransform);
+        });
+
+        function resetObj() {
+            if (!activeObj) return;
+            activeObj.position.set(0, 0, 0);
+            activeObj.rotation.set(0, 0, 0);
+            pickObj(activeObj);
+        }
+
+        window.addEventListener('resize', () => {
+            if(window.innerWidth >= 1024) sidebar.style.transform = 'none';
+        });
+    </script>
+</body>
+</html>
+
