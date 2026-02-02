@@ -47,6 +47,29 @@
         #ar-button-main:disabled { background: #222; color: #555; cursor: not-allowed; box-shadow: none; }
 
         .sidebar-container { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .lens-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 6px;
+            border-radius: 14px;
+            font-size: 11px;
+            transition: all 0.2s;
+            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .lens-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .lens-label { font-size: 8px; text-transform: uppercase; opacity: 0.6; }
     </style>
 </head>
 <body class="flex flex-col lg:flex-row-reverse">
@@ -63,7 +86,7 @@
     </button>
 
     <!-- Barra Lateral de Controlo -->
-    <aside id="sidebar" class="sidebar-container fixed inset-x-0 bottom-0 lg:relative lg:inset-auto lg:w-96 h-[65vh] lg:h-screen glass z-40 translate-y-full lg:translate-y-0 flex flex-col shadow-2xl">
+    <aside id="sidebar" class="sidebar-container fixed inset-x-0 bottom-0 lg:relative lg:inset-auto lg:w-96 h-[80vh] lg:h-screen glass z-40 translate-y-full lg:translate-y-0 flex flex-col shadow-2xl">
         
         <!-- Puxador Mobile -->
         <div onclick="toggleSidebar()" class="lg:hidden w-full flex justify-center py-4 cursor-pointer">
@@ -72,8 +95,8 @@
 
         <!-- Abas (Tabs) -->
         <div class="flex border-b border-white/5 text-[11px] font-bold uppercase tracking-widest px-4">
-            <button onclick="switchTab('lib')" id="tab-lib" class="flex-1 py-5 tab-active">Cenários</button>
-            <button onclick="switchTab('insp')" id="tab-insp" class="flex-1 py-5 text-gray-500">Inspetor</button>
+            <button onclick="switchTab('lib')" id="tab-lib" class="flex-1 py-5 tab-active">Biblioteca</button>
+            <button onclick="switchTab('insp')" id="tab-insp" class="flex-1 py-5 text-gray-500">Direção</button>
         </div>
 
         <!-- Conteúdo: Biblioteca -->
@@ -81,34 +104,71 @@
             <input type="file" id="upload-input" accept=".glb,.gltf" class="hidden" multiple>
             <label for="upload-input" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-4 rounded-2xl cursor-pointer transition-all mb-8 text-center shadow-xl flex items-center justify-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
-                IMPORTAR DO SKETCHUP
+                IMPORTAR CENÁRIO (.GLB)
             </label>
             
             <div id="file-list" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scroll">
-                <p class="text-gray-600 text-xs text-center py-10 leading-relaxed italic">Carregue o cenário exportado em .glb para visualizar na sala de ensaio.</p>
+                <p class="text-gray-600 text-xs text-center py-10 leading-relaxed italic">Importe o cenário do SketchUp para começar o ensaio.</p>
             </div>
         </div>
 
-        <!-- Conteúdo: Inspetor -->
-        <div id="view-insp" class="hidden p-6 flex flex-col flex-1 overflow-hidden">
-            <div id="scene-tree" class="flex-1 overflow-y-auto space-y-1 mb-6 text-xs bg-black/40 p-4 rounded-2xl border border-white/5 custom-scroll">
-                <span class="text-gray-600 italic">Selecione um cenário primeiro...</span>
+        <!-- Conteúdo: Inspetor / Direção -->
+        <div id="view-insp" class="hidden p-6 flex flex-col flex-1 overflow-y-auto custom-scroll">
+            
+            <!-- Seleção de Lentes Reais -->
+            <div class="mb-8">
+                <label class="text-[10px] text-gray-400 uppercase tracking-widest block mb-4 flex justify-between">
+                    Lentes do Dispositivo 
+                    <span class="text-blue-500 font-bold" id="current-lens-display">1x Wide</span>
+                </label>
+                <div class="flex gap-2">
+                    <button onclick="setLens('0.5x', this)" class="lens-btn">
+                        <span class="lens-label">U-Wide</span>
+                        0.5x
+                    </button>
+                    <button onclick="setLens('1x', this)" class="lens-btn active">
+                        <span class="lens-label">Main</span>
+                        1x
+                    </button>
+                    <button onclick="setLens('2x', this)" class="lens-btn">
+                        <span class="lens-label">Portrait</span>
+                        2x
+                    </button>
+                    <button onclick="setLens('3x', this)" class="lens-btn">
+                        <span class="lens-label">Tele</span>
+                        3x
+                    </button>
+                    <button onclick="setLens('5x', this)" class="lens-btn">
+                        <span class="lens-label">Zoom</span>
+                        5x
+                    </button>
+                </div>
+                <div class="mt-4 p-3 bg-blue-600/10 border border-blue-500/20 rounded-xl">
+                    <p class="text-[9px] text-blue-300 leading-tight">
+                        <b>Nota de Direção:</b> A simulação ajusta o Campo de Visão (FOV) para coincidir com as lentes reais dos smartphones mais comuns (iPhone Pro/Android).
+                    </p>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-4">Estrutura de Objetos</p>
+            <div id="scene-tree" class="min-h-[120px] space-y-1 mb-6 text-xs bg-black/40 p-4 rounded-2xl border border-white/5">
+                <span class="text-gray-600 italic">Mapeie um arquivo...</span>
             </div>
 
             <!-- Painel de Transformação -->
-            <div id="edit-panel" class="space-y-6 border-t border-white/10 pt-6 opacity-25 pointer-events-none">
+            <div id="edit-panel" class="space-y-6 border-t border-white/10 pt-6 opacity-25 pointer-events-none pb-24">
                 <div class="flex justify-between items-center">
                     <h3 id="target-name" class="text-sm font-bold text-blue-400 truncate pr-4">Nenhum objeto</h3>
-                    <button onclick="resetObj()" class="text-[10px] bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/20 transition-colors">REPOR</button>
+                    <button onclick="resetObj()" class="text-[10px] bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/20 transition-colors">RESET</button>
                 </div>
                 
                 <div class="space-y-6">
                     <div class="space-y-3">
-                        <label class="text-[10px] text-gray-400 uppercase tracking-widest flex justify-between">Horizontal (X) <span id="val-x" class="text-blue-500">0.0</span></label>
+                        <label class="text-[10px] text-gray-400 uppercase tracking-widest flex justify-between">Posição X <span id="val-x" class="text-blue-500">0.0</span></label>
                         <input type="range" id="input-x" min="-20" max="20" step="0.05" value="0">
                     </div>
                     <div class="space-y-3">
-                        <label class="text-[10px] text-gray-400 uppercase tracking-widest flex justify-between">Profundidade (Z) <span id="val-z" class="text-blue-500">0.0</span></label>
+                        <label class="text-[10px] text-gray-400 uppercase tracking-widest flex justify-between">Posição Z <span id="val-z" class="text-blue-500">0.0</span></label>
                         <input type="range" id="input-z" min="-20" max="20" step="0.05" value="0">
                     </div>
                     <div class="space-y-3">
@@ -120,7 +180,7 @@
         </div>
     </aside>
 
-    <!-- Ícone de Menu Mobile -->
+    <!-- Menu Mobile -->
     <button onclick="toggleSidebar()" class="lg:hidden fixed top-6 right-6 z-50 bg-black/60 backdrop-blur-lg p-4 rounded-2xl border border-white/10">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
     </button>
@@ -137,7 +197,8 @@
             shadow-intensity="2"
             environment-image="neutral"
             exposure="1"
-            touch-action="none">
+            touch-action="none"
+            field-of-view="53deg"> <!-- Default: 1x (Wide) aprox 53deg Vertical -->
         </model-viewer>
     </main>
 
@@ -151,12 +212,12 @@
         const arBtn = document.getElementById('ar-button-main');
         const arBtnText = document.getElementById('ar-btn-text');
         const toast = document.getElementById('status-toast');
+        const currentLensDisplay = document.getElementById('current-lens-display');
         
         let models = [];
         let activeObj = null;
         let sidebarOpen = false;
 
-        // Verificação de Segurança HTTPS
         const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
         function showToast(msg) {
@@ -165,8 +226,31 @@
             setTimeout(() => toast.classList.add('hidden'), 5000);
         }
 
-        if (!isSecure) {
-            showToast("Atenção: A AR requer HTTPS para abrir a câmara no iPhone.");
+        if (!isSecure) showToast("AR requer HTTPS para abrir a câmara no iPhone.");
+
+        // Lentes Reais: Mapeamento de Fator de Zoom para FOV Vertical real (aproximado)
+        function setLens(factor, btn) {
+            const fovMap = {
+                '0.5x': '80deg',  // Ultra-Wide (aprox 13mm)
+                '1x': '53deg',    // Wide Main (aprox 24-26mm)
+                '2x': '28deg',    // Tele / Portrait (aprox 52mm)
+                '3x': '18deg',    // Tele (aprox 77mm)
+                '5x': '11deg'     // Periscope Zoom
+            };
+
+            const labels = {
+                '0.5x': '0.5x Ultra-Wide',
+                '1x': '1x Wide (Main)',
+                '2x': '2x Portrait',
+                '3x': '3x Telephoto',
+                '5x': '5x Super Zoom'
+            };
+
+            viewer.fieldOfView = fovMap[factor];
+            currentLensDisplay.textContent = labels[factor];
+
+            document.querySelectorAll('.lens-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         }
 
         function toggleSidebar() {
@@ -184,24 +268,16 @@
 
         async function tryActivateAR() {
             if (!isSecure) {
-                showToast("Erro: HTTPS é obrigatório para aceder à câmara.");
+                showToast("HTTPS obrigatório para a câmara.");
                 return;
             }
-
-            if (viewer.canActivateAR) {
-                viewer.activateAR();
-            } else {
-                showToast("A processar modelo para AR... Tente novamente em segundos.");
-            }
+            if (viewer.canActivateAR) viewer.activateAR();
         }
 
         uploadInput.onchange = (e) => {
             const files = Array.from(e.target.files);
             if (files.length === 0) return;
-
-            arBtnText.textContent = "A CARREGAR...";
-            arBtn.disabled = true;
-
+            arBtnText.textContent = "PROCESSANDO...";
             files.forEach(file => {
                 const url = URL.createObjectURL(file);
                 const item = { name: file.name, url: url, id: Date.now() };
@@ -213,9 +289,9 @@
 
         function updateLibrary() {
             fileList.innerHTML = models.map(m => `
-                <div onclick="selectModelById(${m.id})" class="p-4 bg-white/5 rounded-2xl border ${viewer.src === m.url ? 'border-blue-500 bg-blue-500/10' : 'border-white/5'} hover:border-blue-500/50 cursor-pointer text-xs truncate transition-all flex justify-between items-center group">
+                <div onclick="selectModelById(${m.id})" class="p-4 bg-white/5 rounded-2xl border ${viewer.src === m.url ? 'border-blue-500 bg-blue-500/10' : 'border-white/5'} hover:border-blue-500 cursor-pointer text-xs flex justify-between items-center group">
                     <span class="truncate pr-4">${m.name}</span>
-                    <div class="w-2 h-2 rounded-full ${viewer.src === m.url ? 'bg-blue-500 shadow-[0_0_10px_#3b82f6]' : 'bg-gray-700'} group-hover:bg-blue-400"></div>
+                    <div class="w-2 h-2 rounded-full ${viewer.src === m.url ? 'bg-blue-500 shadow-[0_0_10px_#3b82f6]' : 'bg-gray-700'}"></div>
                 </div>
             `).join('');
         }
@@ -229,7 +305,7 @@
             viewer.src = m.url;
             activeObj = null;
             editPanel.classList.add('opacity-25', 'pointer-events-none');
-            sceneTree.innerHTML = '<span class="text-blue-400 animate-pulse text-xs italic">A mapear estrutura 3D...</span>';
+            sceneTree.innerHTML = '<span class="text-blue-400 animate-pulse text-xs italic">Lendo nós do modelo...</span>';
             
             viewer.addEventListener('load', () => {
                 arBtn.disabled = false;
@@ -243,10 +319,8 @@
             const sym = Symbol.for('threeScene');
             const scene = viewer[sym];
             if (!scene) return;
-
             sceneTree.innerHTML = '';
             let count = 0;
-
             scene.traverse((node) => {
                 if (node.name && node.name.length > 2 && !node.name.includes("Scene") && !node.name.includes("Static")) {
                     count++;
@@ -257,28 +331,20 @@
                     sceneTree.appendChild(div);
                 }
             });
-
-            if (count === 0) {
-                sceneTree.innerHTML = '<p class="text-gray-600 text-[10px] text-center">Nenhum objeto nomeado encontrado. Agrupe no SketchUp para os poder mover aqui.</p>';
-            }
+            if (count === 0) sceneTree.innerHTML = '<p class="text-gray-600 text-[10px] text-center italic">Sem grupos nomeados encontrados.</p>';
         }
 
         function pickObj(node) {
             activeObj = node;
             document.getElementById('target-name').textContent = node.name;
             editPanel.classList.remove('opacity-25', 'pointer-events-none');
-            
             document.getElementById('input-x').value = node.position.x;
             document.getElementById('input-z').value = node.position.z;
             document.getElementById('input-r').value = (node.rotation.y * 180 / Math.PI) % 360;
-            
             syncLabels();
-
             Array.from(sceneTree.children).forEach(c => {
-                const isSelected = c.textContent === node.name;
-                c.className = isSelected ? "p-3 bg-blue-600/30 text-blue-200 rounded-xl cursor-pointer truncate mb-1" : "p-3 hover:bg-blue-500/10 rounded-xl cursor-pointer transition-colors truncate mb-1 border-b border-white/5 last:border-0";
+                c.className = c.textContent === node.name ? "p-3 bg-blue-600/30 text-blue-200 rounded-xl cursor-pointer truncate mb-1" : "p-3 hover:bg-blue-500/10 rounded-xl cursor-pointer transition-colors truncate mb-1 border-b border-white/5 last:border-0";
             });
-
             if(window.innerWidth < 1024) switchTab('insp');
         }
 
@@ -297,21 +363,6 @@
             syncLabels();
         };
 
-        ['input-x', 'input-z', 'input-r'].forEach(id => {
-            document.getElementById(id).addEventListener('input', applyTransform);
-        });
+        ['input-x', 'input-z', 'input-r'].forEach(id => document.getElementById(id).addEventListener('input', applyTransform));
 
-        function resetObj() {
-            if (!activeObj) return;
-            activeObj.position.set(0, 0, 0);
-            activeObj.rotation.set(0, 0, 0);
-            pickObj(activeObj);
-        }
-
-        window.addEventListener('resize', () => {
-            if(window.innerWidth >= 1024) sidebar.style.transform = 'none';
-        });
-    </script>
-</body>
-</html>
-
+        function
