@@ -1,0 +1,233 @@
+<title>Mascote Visões Pixel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ficha de estúdio, três sprites pixel-art com avatar de rede e versão de terminal feita dos mesmos mapas */
+:root {
+  --ink: #0f0d14;
+  --panel: #181521;
+  --line: #2b2638;
+  --paper: #ece7de;
+  --muted: #9b94aa;
+  --lilac: #b9a2ff;
+  --mint: #5ee0a8;
+  --jelly: #6fd8ea;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "Hanken Grotesk", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html { background: var(--ink); }
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.55;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+header { display: flex; flex-direction: column; gap: 12px; max-width: 62ch; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 7vw, 3.6rem); line-height: 1.04; margin: 0; text-wrap: balance; }
+h1 em { font-style: italic; font-weight: 500; color: var(--mint); }
+header p { margin: 0; color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; display: flex; flex-direction: column; min-width: 0; }
+.stage { aspect-ratio: 1 / 1; display: grid; place-items: center; border-bottom: 1px solid var(--line); background:
+  linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 24px,
+  linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 24px 100%, var(--panel); background-blend-mode: normal; }
+.stage svg { width: 74%; height: auto; display: block; shape-rendering: crispEdges; }
+.body { padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.tag { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.15; margin: 0; text-wrap: balance; }
+.body p { margin: 0; color: var(--muted); font-size: .95rem; }
+dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: .88rem; }
+dt { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-top: 2px; }
+dd { margin: 0; }
+.avatars { display: flex; align-items: center; gap: 12px; padding-top: 4px; }
+.avatar { width: 56px; height: 56px; border-radius: 12px; overflow: hidden; display: grid; place-items: center; flex: none; border: 1px solid var(--line); }
+.avatar svg { width: 84%; height: 84%; display: block; shape-rendering: crispEdges; }
+.avatars span { font-size: .8rem; color: var(--muted); }
+.term { background: #0a090e; border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.term h3 { font-family: var(--display); font-size: 1.25rem; margin: 0; font-weight: 700; }
+.term p { margin: 0; color: var(--muted); font-size: .92rem; max-width: 60ch; }
+.term-row { display: flex; flex-wrap: wrap; gap: 28px; }
+.term pre { margin: 0; font-family: var(--mono); font-size: 14px; line-height: 1; letter-spacing: 0; overflow-x: auto; }
+footer { border-top: 1px solid var(--line); padding-top: 20px; display: flex; flex-direction: column; gap: 6px; font-size: .92rem; }
+footer strong { font-family: var(--display); font-size: 1.15rem; }
+footer span { color: var(--muted); }
+@keyframes hop { 0%, 49% { transform: translateY(0); } 50%, 100% { transform: translateY(-16px); } }
+@keyframes flick { 0%, 49% { opacity: 1; } 50%, 100% { opacity: .45; } }
+.hop { animation: hop 1s steps(1) infinite; }
+.flick { animation: flick .8s steps(1) infinite; }
+@media (prefers-reduced-motion: reduce) { .hop, .flick { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Visões Filmes · terceira rodada · 26/10/2026</div>
+    <h1>Bichos de <em>pixel</em> para a Visões</h1>
+    <p>As mesmas três bolhas, agora em pixel-art de grade 16 colunas, no estilo do mascote do Claude Code: formas chapadas, sem gradiente. E agora todas nascem da palavra Visões: o V das antenas, os olhos no plural e a luz que projeta. Cada sprite é um mapa de texto, então vira avatar, terminal e animação sem redesenhar.</p>
+  </header>
+
+  <section class="grid" aria-label="Sprites">
+    <article class="card">
+      <div class="stage" data-sprite="s1"></div>
+      <div class="body">
+        <div class="tag" style="color:var(--lilac)">1 · provisório “Vi”</div>
+        <h2>O V que enxerga</h2>
+        <p>As duas antenas desenham o V de Visões e se encontram no topo da cabeça. Lilás, com bochechas rosadas.</p>
+        <dl>
+          <dt>Grade</dt><dd>16 × 15 células</dd>
+          <dt>Cores</dt><dd>Lilás, rosa, âmbar, grafite</dd>
+          <dt>Animar</dt><dd>Pulinho em 2 quadros, antenas piscam</dd>
+        </dl>
+        <div class="avatars"><div class="avatar" data-sprite="s1" style="background:#221d36"></div><span>avatar de rede</span></div>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="stage" data-sprite="s2"></div>
+      <div class="body">
+        <div class="tag" style="color:var(--mint)">2 · provisório “Vizu”</div>
+        <h2>Três olhos, várias visões</h2>
+        <p>Plural de visão: dois olhos comuns e um terceiro olho âmbar, que parece lente de projetor. Antenas âmbar e ciano, como canais de vídeo.</p>
+        <dl>
+          <dt>Grade</dt><dd>16 × 15 células</dd>
+          <dt>Cores</dt><dd>Menta, branco, âmbar, ciano</dd>
+          <dt>Animar</dt><dd>Pulinho em 2 quadros, antenas piscam</dd>
+        </dl>
+        <div class="avatars"><div class="avatar" data-sprite="s2" style="background:#14241f"></div><span>avatar de rede</span></div>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="stage" data-sprite="s3"></div>
+      <div class="body">
+        <div class="tag" style="color:var(--jelly)">3 · provisório “Lume”</div>
+        <h2>Olho-lâmpada na barriga</h2>
+        <p>Ciano, com olhinhos felizes. A luz âmbar da barriga tem íris e pupila: é a visão sendo projetada.</p>
+        <dl>
+          <dt>Grade</dt><dd>16 × 15 células</dd>
+          <dt>Cores</dt><dd>Ciano, âmbar, grafite</dd>
+          <dt>Animar</dt><dd>Pulinho em 2 quadros, luz pulsa</dd>
+        </dl>
+        <div class="avatars"><div class="avatar" data-sprite="s3" style="background:#10222a"></div><span>avatar de rede</span></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="term" aria-label="Versão de terminal">
+    <h3>No terminal</h3>
+    <p>Os mesmos mapas em blocos de texto, para status line ou boas-vindas das skills da Visões. Em terminal sem cor, vira monocromático e continua legível.</p>
+    <div class="term-row" id="term-row"></div>
+  </section>
+
+  <footer>
+    <strong>Qual segue?</strong>
+    <span>Responda 1, 2 ou 3, ou misture. Diga o que ajustar: mais largo, olhos maiores, outra cor, mais sprites de expressão (feliz, pensando, trabalhando).</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var SPRITES = {
+    s1: {
+      pal: { B: "#b9a2ff", H: "#e0d6ff", D: "#8a6fe0", E: "#2a2140", P: "#ff8fb8", M: "#2a2140", A: "#f2b441" },
+      map: [
+        "...A........A...",
+        "....A......A....",
+        ".....A....A.....",
+        ".......AA.......",
+        "....BBBBBBBB....",
+        "..BBBHHBBBBBBB..",
+        ".BBBHHBBBBBBBBB.",
+        ".BBBBBBBBBBBBBB.",
+        ".BBBEEBBBBEEBBB.",
+        ".BBBEEBBBBEEBBB.",
+        ".BPPBBBBBBBBPPB.",
+        ".BBBBBBMMBBBBBB.",
+        ".DBBBBBBBBBBBBD.",
+        "..DDDDDDDDDDDD..",
+        "................"
+      ]
+    },
+    s2: {
+      pal: { B: "#5ee0a8", H: "#b8ffe0", D: "#3bb883", E: "#10241d", W: "#ffffff", M: "#10241d", A: "#f2b441", C: "#46d9ff" },
+      map: [
+        ".A............C.",
+        "..A..........C..",
+        "...A........C...",
+        "....BBBBBBBB....",
+        "...BBHHBBBBBB...",
+        "..BBHHBBBBBBBB..",
+        ".BWWWBBBBBBWWWB.",
+        ".BWEWBBAABBWEWB.",
+        ".BWWWBBAABBWWWB.",
+        ".BBBBBBBBBBBBBB.",
+        "BBBBBBBBBBBBBBBB",
+        ".BBBBBBMMBBBBBB.",
+        ".DBBBBBBBBBBBBD.",
+        "..DDDDDDDDDDDD.."
+      ]
+    },
+    s3: {
+      pal: { C: "#6fd8ea", H: "#d4f7fc", D: "#3fa9bd", E: "#17424d", A: "#f2b441", Y: "#fff3c4" },
+      map: [
+        "................",
+        "......CC........",
+        ".......C........",
+        "....CCCCCCCC....",
+        "...CCHHCCCCCC...",
+        "..CCHHCCCCCCCC..",
+        ".CCCCCCCCCCCCCC.",
+        ".CCCCECCCCECCCC.",
+        ".CCCECECCECECCC.",
+        ".CCCCCCCCCCCCCC.",
+        ".CCCCCAYAACCCCC.",
+        ".CCCCAAEEAACCCC.",
+        ".CCCCCAAAACCCCC.",
+        ".DCCCCCCCCCCCCD.",
+        "..DDDDDDDDDDDD.."
+      ]
+    }
+  };
+  var GLOW = { A: 1, Y: 1 };
+  var CELL = 16;
+
+  function svg(key) {
+    var sp = SPRITES[key], cells = "", glow = "";
+    for (var r = 0; r < sp.map.length; r++) {
+      for (var c = 0; c < sp.map[r].length; c++) {
+        var ch = sp.map[r][c];
+        if (ch === ".") continue;
+        var rect = '<rect x="' + (c * CELL) + '" y="' + (r * CELL) + '" width="' + CELL + '" height="' + CELL + '" fill="' + sp.pal[ch] + '"' + (GLOW[ch] ? ' class="flick"' : "") + "/>";
+        cells += rect;
+      }
+    }
+    var w = sp.map[0].length * CELL, h = sp.map.length * CELL;
+    return '<svg viewBox="0 -16 ' + w + " " + (h + 16) + '" role="img" aria-label="' + key + '"><g class="hop">' + cells + "</g></svg>";
+  }
+
+  function term(key) {
+    var sp = SPRITES[key], out = [];
+    for (var r = 0; r < sp.map.length; r++) {
+      var line = "";
+      for (var c = 0; c < sp.map[r].length; c++) {
+        var ch = sp.map[r][c];
+        line += ch === "." ? " " : '<span style="color:' + sp.pal[ch] + '">█</span>';
+      }
+      out.push(line);
+    }
+    return '<pre aria-label="' + key + ' em blocos">' + out.join("\n") + "</pre>";
+  }
+
+  document.querySelectorAll("[data-sprite]").forEach(function (el) {
+    el.innerHTML = svg(el.getAttribute("data-sprite"));
+  });
+  document.getElementById("term-row").innerHTML = ["s1", "s2", "s3"].map(term).join("");
+})();
+</script>
