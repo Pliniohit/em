@@ -161,7 +161,7 @@ footer span { color: var(--muted); }
     { id: "tele", nome: "Teleportando", uso: "Sincronizando entre máquinas, a colmeia." }
   ];
 
-  var C = null, FX = null, T = 0, MASK = null, WP = 1, WV = 1;
+  var C = null, FX = null, T = 0, MASK = null, WP = 1, WV = 1, OUTC = OUTL;
   var FXC = document.createElement("canvas"); FXC.width = W; FXC.height = W;
   FX = FXC.getContext("2d");
 
@@ -196,7 +196,7 @@ footer span { color: var(--muted); }
     for (var y = 0; y < W; y++) for (var x = 0; x < W; x++) {
       if (al(x, y) < 30 && (al(x - 1, y) >= 150 || al(x + 1, y) >= 150 || al(x, y - 1) >= 150 || al(x, y + 1) >= 150)) out.push([x, y]);
     }
-    ctx.globalAlpha = 0.95; ctx.fillStyle = OUTL;
+    ctx.globalAlpha = 0.95; ctx.fillStyle = OUTC;
     for (var i = 0; i < out.length; i++) ctx.fillRect(out[i][0], out[i][1], 1, 1);
   }
 
@@ -311,6 +311,7 @@ footer span { color: var(--muted); }
 
   function render(ctx, state, t, pal) {
     C = ctx; T = t; MASK = null; WV = 1; TL = 0;
+    OUTC = mixc(pal.d, "#140a22", 0.62);
     ctx.clearRect(0, 0, W, W); FX.clearRect(0, 0, W, W);
     var oy = 0, ox = 0, amul = 1, pd = pal.d;
 
