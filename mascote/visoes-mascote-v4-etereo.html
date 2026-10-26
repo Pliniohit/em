@@ -68,7 +68,7 @@ footer span { color: var(--muted); }
   <header>
     <div class="eyebrow">Visões Filmes · quarta rodada · 26/10/2026</div>
     <h1>Um espírito de luz com <em>humor</em> próprio</h1>
-    <p>Mais etéreo: corpo translúcido com borda luminosa, base que se desfaz em poeira e nenhuma sombra no chão, porque ele flutua. O V das antenas e os olhos continuam da palavra Visões. Agora ele tem oito comportamentos, cada um mapeado para uma coisa que o Claude faz de fato.</p>
+    <p>Mais etéreo: corpo translúcido com borda luminosa, base que se desfaz em poeira e nenhuma sombra no chão, porque ele flutua. Orelhinhas de gatinho no lugar das antenas, e os olhos seguem a ideia de visões. Agora ele tem oito comportamentos, cada um mapeado para uma coisa que o Claude faz de fato.</p>
   </header>
 
   <section class="live" aria-label="Bicho ao vivo">
@@ -165,16 +165,19 @@ footer span { color: var(--muted); }
       P(x, y, col, 0.55 - ((T + k * 3) % 5) * 0.1);
     }
   }
-  function antennas(oy, ox, pal, mode, tipA) {
-    var L = [[6, 1], [7, 2], [8, 3], [9, 4], [10, 5]];
-    if (mode === "droop") L = [[5, 3], [6, 4], [7, 4], [8, 5], [9, 5], [10, 5]];
-    for (var k = 0; k < L.length; k++) {
-      var lx = L[k][0], ly = L[k][1] + oy;
-      var tip = k === 0 || (mode === "droop" && k === 0);
-      P(lx + ox, ly, tip ? AMB : pal.l, tip ? tipA[0] : 0.95);
-      P(23 - lx + ox, ly, tip ? AMB : pal.l, tip ? tipA[1] : 0.95);
+  var EAR = [[6, 3, "e"], [6, 4, "e"], [7, 4, "e"], [6, 5, "e"], [7, 5, "i"], [8, 5, "e"], [6, 6, "e"], [7, 6, "i"], [8, 6, "i"], [9, 6, "e"], [6, 7, "e"], [7, 7, "f"]];
+  function ears(oy, ox, pal, o) {
+    var ic = o.inner || PINK, ia = o.ia == null ? 0.85 : o.ia, am = o.droop ? 0.65 : 1;
+    for (var side = 0; side < 2; side++) {
+      var dy = (side ? o.rd : o.ld) || 0, dx = 0;
+      if (o.droop) { dy += 1; dx = side ? 1 : -1; }
+      for (var k = 0; k < EAR.length; k++) {
+        var p = EAR[k], x = side ? 23 - p[0] : p[0];
+        var col = p[2] === "e" ? pal.l : (p[2] === "i" ? ic : pal.b);
+        var a = (p[2] === "e" ? 0.95 : (p[2] === "i" ? ia : 0.72)) * am;
+        P(x + dx + ox, p[1] + dy + oy, col, a);
+      }
     }
-    P(11 + ox, 5 + oy, pal.l, 0.95); P(12 + ox, 5 + oy, pal.l, 0.95);
   }
   function eyes(kind, oy, ox, t) {
     var y = 10 + oy, lx = 8 + ox, rx = 14 + ox;
@@ -210,19 +213,17 @@ footer span { color: var(--muted); }
       oy = Math.round(Math.sin(t / 4));
       var bl = (t % 38) < 2;
       body(oy, 0, pal.b, pal.l, null, amul); dust(oy, pal.l);
-      antennas(oy, 0, pal, "up", tipA); eyes(bl ? "blink" : "open", oy, 0, t);
+      ears(oy, 0, pal, { ld: (t % 53) < 3 ? 1 : 0, rd: (t % 71) < 3 ? 1 : 0 }); eyes(bl ? "blink" : "open", oy, 0, t);
     } else if (state === "think") {
       oy = Math.round(Math.sin(t / 6));
       body(oy, 0, pal.b, pal.l, null, amul); dust(oy, pal.l);
-      tipA = [0.4, (t % 10) < 5 ? 1 : 0.35];
-      antennas(oy, 0, pal, "up", tipA); eyes("think", oy, 0, t);
+      ears(oy, 0, pal, { ld: 0, rd: -1, ia: (t % 10) < 5 ? 1 : 0.55 }); eyes("think", oy, 0, t);
       var n = Math.floor(t / 5) % 4;
       for (var d = 0; d < n; d++) P(18 + d * 2, 3 + oy, pal.l, 0.95);
     } else if (state === "work") {
       oy = (t % 6) < 3 ? 0 : 0;
       body(oy, 0, pal.b, pal.l, null, amul); dust(oy, pal.l);
-      tipA = [(t % 6) < 3 ? 1 : 0.25, (t % 6) < 3 ? 0.25 : 1];
-      antennas(oy, 0, pal, "up", tipA); eyes("work", oy, 0, t);
+      ears(oy, 0, pal, { ld: (t % 6) < 3 ? -1 : 0, rd: (t % 6) < 3 ? 0 : -1 }); eyes("work", oy, 0, t);
       for (var k = 0; k < 3; k++) {
         var ang = t / 3.5 + k * 2.094;
         P(11.5 + Math.cos(ang) * 10.5, 11 + Math.sin(ang) * 6, AMB, 0.95);
@@ -232,7 +233,7 @@ footer span { color: var(--muted); }
       oy = -Math.round(Math.abs(Math.sin(t / 2.2)) * 3);
       body(oy, 0, pal.b, pal.l, null, amul); dust(oy, pal.l);
       var wv = (t % 6) < 3 ? 0 : 1;
-      antennas(oy, wv, pal, "up", [1, 1]); eyes("happy", oy, 0, t); smile(oy, 0);
+      ears(oy, 0, pal, { ld: wv ? -1 : 0, rd: wv ? 0 : -1 }); eyes("happy", oy, 0, t); smile(oy, 0);
       P(7, 13 + oy, PINK, 0.8); P(8, 13 + oy, PINK, 0.8); P(15, 13 + oy, PINK, 0.8); P(16, 13 + oy, PINK, 0.8);
       var sp = [[3, 6], [20, 8], [2, 15], [21, 16]];
       for (var s = 0; s < sp.length; s++) {
@@ -245,7 +246,7 @@ footer span { color: var(--muted); }
       oy = 1 + Math.round(Math.sin(t / 8));
       amul = 0.72;
       body(oy, 0, pal.b, pal.l, null, amul); dust(oy, pal.l);
-      antennas(oy, 0, pal, "droop", [0.25, 0.25]); eyes("closed", oy, 0, t);
+      ears(oy, 0, pal, { droop: true }); eyes("closed", oy, 0, t);
       for (var z = 0; z < 2; z++) {
         var ph = ((t / 2) + z * 6) % 12;
         var zx = 16 + ph * 0.4, zy = 9 - ph * 0.65, za = 1 - ph / 12;
@@ -256,7 +257,7 @@ footer span { color: var(--muted); }
     } else if (state === "project") {
       oy = Math.round(Math.sin(t / 5) * 0.8);
       body(oy, -2, pal.b, pal.l, null, amul); dust(oy, pal.l);
-      antennas(oy, -2, pal, "up", [1, 1]); eyes("open", oy, -2, t);
+      ears(oy, -2, pal, { inner: AMB, ia: 0.55 + 0.45 * Math.sin(t / 2.5) }); eyes("open", oy, -2, t);
       var pu = 0.55 + 0.45 * Math.sin(t / 2.5);
       P(9, 8 + oy, AMB, pu); P(10, 8 + oy, AMB, pu); P(9, 9 + oy, AMB, pu); P(10, 9 + oy, AMB, pu);
       for (var c = 17; c < W; c++) {
@@ -273,7 +274,7 @@ footer span { color: var(--muted); }
       var rs = on ? function (y) { return (y >= yb && y < yb + 3) ? dir : 0; } : null;
       if (on) { body(oy, -2, "#ff4fa3", "#ffb0d6", null, 0.45); body(oy, 2, "#46d9ff", "#c8f4ff", null, 0.45); }
       body(oy, 0, pal.b, pal.l, rs, amul); dust(oy, pal.l);
-      antennas(oy, on ? 1 : 0, pal, "up", [on ? 1 : 0.2, on ? 0.2 : 1]);
+      ears(oy, on ? 1 : 0, pal, { ld: on ? 1 : 0, rd: on ? -1 : 0 });
       eyes(on ? "x" : "open", oy, 0, t);
       if (on) for (var g = 0; g < 4; g++) P(Math.floor(hash(t, g, 3) * 24), Math.floor(hash(t, g, 4) * 20), "#ffffff", 0.6);
     } else if (state === "tele") {
@@ -285,7 +286,7 @@ footer span { color: var(--muted); }
       oy = Math.round(Math.sin(t / 4));
       MASK = function (x, y) { return hash(x, y, cyc * 2 + (p < 20 ? 0 : 1)) >= thr; };
       body(oy, ox, pal.b, pal.l, null, amul); dust(oy, pal.l);
-      antennas(oy, ox, pal, "up", tipA); eyes("open", oy, ox, t);
+      ears(oy, ox, pal, {}); eyes("open", oy, ox, t);
       MASK = null;
       if (p >= 10 && p < 24) {
         for (var s2 = 0; s2 < 6; s2++) {
