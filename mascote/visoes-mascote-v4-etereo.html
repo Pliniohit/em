@@ -9,7 +9,7 @@
   --line: #2b2638;
   --paper: #ece7de;
   --muted: #9b94aa;
-  --amber: #f2b441;
+  --turq: #30d5c8;
   --glow: rgba(185, 162, 255, .55);
   --accent: #b9a2ff;
   --display: "Fraunces", Georgia, "Times New Roman", serif;
@@ -49,7 +49,7 @@ header p { margin: 0; color: var(--muted); }
 .chip { font: 500 .88rem var(--body); color: var(--paper); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
 .chip i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 .chip[aria-pressed="true"] { border-color: var(--accent); background: rgba(255, 255, 255, .06); }
-.chip:focus-visible, .cell:focus-visible, .big:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.chip:focus-visible, .cell:focus-visible, .big:focus-visible { outline: 2px solid var(--turq); outline-offset: 2px; }
 .hint { font-size: .85rem; color: var(--muted); margin: 0; }
 .sheet-title { font-family: var(--display); font-size: 1.4rem; font-weight: 700; margin: 0 0 14px; }
 .sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
@@ -68,7 +68,7 @@ footer span { color: var(--muted); }
   <header>
     <div class="eyebrow">Visões Filmes · quarta rodada · 26/10/2026</div>
     <h1>Um espírito de luz com <em>humor</em> próprio</h1>
-    <p>Mais etéreo: corpo translúcido com borda luminosa, base que se desfaz em poeira e nenhuma sombra no chão, porque ele flutua. Ele não é gato: é uma quimerinha, com orelhinhas, asinhas e olhos de visão. Agora ele tem oito comportamentos, cada um mapeado para uma coisa que o Claude faz de fato.</p>
+    <p>Mais etéreo: corpo translúcido com borda luminosa, base que se desfaz em poeira e nenhuma sombra no chão, porque ele flutua. Ele não é gato: é uma quimerinha, com orelhinhas, asinhas e olhos de visão. A cor e as asas mudam com o humor. Agora ele tem oito comportamentos, cada um mapeado para uma coisa que o Claude faz de fato.</p>
   </header>
 
   <section class="live" aria-label="Bicho ao vivo">
@@ -77,10 +77,11 @@ footer span { color: var(--muted); }
       <h2 class="state-name" id="sname">Flutuando</h2>
       <p class="state-use" id="suse">Ocioso, esperando você.</p>
       <div class="ctl" role="group" aria-label="Cor do corpo">
-        <div class="ctl-label">Cor</div>
+        <div class="ctl-label">Cor base</div>
         <button class="chip" type="button" id="pal-lilas" data-pal="lilas" aria-pressed="true"><i style="background:#b9a2ff"></i>Lilás</button>
         <button class="chip" type="button" id="pal-menta" data-pal="menta" aria-pressed="false"><i style="background:#5ee0a8"></i>Menta</button>
         <button class="chip" type="button" id="pal-ciano" data-pal="ciano" aria-pressed="false"><i style="background:#6fd8ea"></i>Ciano</button>
+        <button class="chip" type="button" id="mood" aria-pressed="true">Muda com a emoção</button>
       </div>
       <div class="ctl" role="group" aria-label="Ciclo">
         <div class="ctl-label">Ciclo</div>
@@ -104,19 +105,27 @@ footer span { color: var(--muted); }
 <script>
 (function () {
   var W = 24;
-  var EYE = "#1b1530", AMB = "#f2b441", PINK = "#ff8fb8", WHITE = "#ffffff";
+  var EYE = "#1b1530", TURQ = "#30d5c8", TURQ_L = "#9ff7ee", PINK = "#ff8fb8", WHITE = "#ffffff";
   var PALS = {
     lilas: { b: "#b9a2ff", l: "#efe8ff", glow: "rgba(185,162,255,.55)" },
     menta: { b: "#5ee0a8", l: "#dcffef", glow: "rgba(94,224,168,.5)" },
     ciano: { b: "#6fd8ea", l: "#e2fbff", glow: "rgba(111,216,234,.5)" }
   };
+  var MOOD = {
+    think: { b: "#8fa4ff", l: "#e3e9ff", glow: "rgba(143,164,255,.5)" },
+    work: { b: "#4fd6c4", l: "#d7fff9", glow: "rgba(79,214,196,.5)" },
+    happy: { b: "#ffb08f", l: "#fff0e6", glow: "rgba(255,176,143,.55)" },
+    sleep: { b: "#8a86b8", l: "#d9d6f0", glow: "rgba(138,134,184,.35)" }
+  };
+  var moodOn = true;
+  function palFor(state) { return (moodOn && MOOD[state]) ? MOOD[state] : PALS[palKey]; }
   var STATES = [
     { id: "idle", nome: "Flutuando", uso: "Ocioso, esperando você." },
-    { id: "think", nome: "Pensando", uso: "Lendo arquivos, raciocinando antes de responder." },
+    { id: "think", nome: "Pensando", uso: "Lendo arquivos, raciocinando antes de responder. As asas ficam tímidas, meio apagadas." },
     { id: "work", nome: "Trabalhando", uso: "Rodando ferramentas, buscando, calculando." },
     { id: "happy", nome: "Feliz", uso: "Tarefa concluída e verificada." },
-    { id: "sleep", nome: "Dormindo", uso: "Sessão parada ou fora de horário." },
-    { id: "project", nome: "Projetando", uso: "Gerando imagem, vídeo ou áudio." },
+    { id: "sleep", nome: "Dormindo", uso: "Sessão parada ou fora de horário. As asas somem." },
+    { id: "project", nome: "Projetando", uso: "Gerando imagem, vídeo ou áudio. A projeção sai do terceiro olho, em turquesa." },
     { id: "glitch", nome: "Glitch", uso: "Erro, conector que falhou, rede fora." },
     { id: "tele", nome: "Teleportando", uso: "Sincronizando entre máquinas, a colmeia." }
   ];
@@ -137,18 +146,22 @@ footer span { color: var(--muted); }
     C.fillRect(x, y, 1, 1);
   }
 
-  var WP = 1;
+  var WP = 1, WV = 1;
   var WING = [
     [[1,6,"e"],[1,7,"e"],[2,7,"f"],[1,8,"e"],[2,8,"f"],[0,9,"e"],[1,9,"f"],[2,9,"f"],[3,9,"f"],[0,10,"e"],[1,10,"f"],[2,10,"f"],[3,10,"f"],[1,11,"e"],[2,11,"f"],[3,11,"f"],[3,12,"f"]],
     [[1,8,"e"],[2,8,"f"],[0,9,"e"],[1,9,"f"],[2,9,"f"],[3,9,"f"],[0,10,"e"],[1,10,"f"],[2,10,"f"],[3,10,"f"],[1,11,"e"],[2,11,"f"],[3,11,"f"],[2,12,"e"],[3,12,"f"]],
     [[3,10,"f"],[2,11,"f"],[3,11,"f"],[1,12,"e"],[2,12,"f"],[3,12,"f"],[0,13,"e"],[1,13,"f"],[2,13,"f"],[3,13,"f"],[1,14,"e"],[2,14,"f"],[3,14,"f"]]
   ];
   function wings(oy, ox, colL, aMul) {
-    var w = WING[WP];
+    if (WV <= 0) return;
+    var w = WING[WP], wb = Math.round(Math.sin(T / 3 + 1));
     for (var side = 0; side < 2; side++) {
       for (var k = 0; k < w.length; k++) {
-        var p = w[k], x = side ? 23 - p[0] : p[0];
-        P(x + ox, p[1] + oy, colL, (p[2] === "e" ? 0.9 : 0.38) * aMul);
+        var p = w[k];
+        if (p[0] > 2) continue;
+        if (WV < 1 && hash(p[0] + side * 7, p[1], 3) >= WV) continue;
+        var x = side ? 23 - p[0] : p[0];
+        P(x + ox, p[1] + oy + wb, colL, (p[2] === "e" ? 0.9 : 0.38) * aMul);
       }
     }
   }
@@ -221,7 +234,7 @@ footer span { color: var(--muted); }
   }
 
   function render(ctx, state, t, pal) {
-    C = ctx; T = t; MASK = null;
+    C = ctx; T = t; MASK = null; WV = 1;
     ctx.clearRect(0, 0, W, W);
     var oy = 0, ox = 0, tipA = [0.6 + 0.4 * Math.sin(t / 3), 0.6 + 0.4 * Math.sin(t / 3 + 2)];
     var amul = 1;
@@ -233,7 +246,7 @@ footer span { color: var(--muted); }
       body(oy, 0, pal.b, pal.l, null, amul); dust(oy, pal.l);
       ears(oy, 0, pal, { ld: (t % 53) < 3 ? 1 : 0, rd: (t % 71) < 3 ? 1 : 0 }); eyes(bl ? "blink" : "open", oy, 0, t);
     } else if (state === "think") {
-      WP = 2;
+      WP = 2; WV = 0.45;
       oy = Math.round(Math.sin(t / 6));
       body(oy, 0, pal.b, pal.l, null, amul); dust(oy, pal.l);
       ears(oy, 0, pal, { ld: 0, rd: -1, ia: (t % 10) < 5 ? 1 : 0.55 }); eyes("think", oy, 0, t);
@@ -246,8 +259,8 @@ footer span { color: var(--muted); }
       ears(oy, 0, pal, { ld: (t % 6) < 3 ? -1 : 0, rd: (t % 6) < 3 ? 0 : -1 }); eyes("work", oy, 0, t);
       for (var k = 0; k < 3; k++) {
         var ang = t / 3.5 + k * 2.094;
-        P(11.5 + Math.cos(ang) * 10.5, 11 + Math.sin(ang) * 6, AMB, 0.95);
-        P(11.5 + Math.cos(ang - .35) * 10.5, 11 + Math.sin(ang - .35) * 6, AMB, 0.4);
+        P(11.5 + Math.cos(ang) * 10.5, 11 + Math.sin(ang) * 6, TURQ, 0.95);
+        P(11.5 + Math.cos(ang - .35) * 10.5, 11 + Math.sin(ang - .35) * 6, TURQ, 0.4);
       }
     } else if (state === "happy") {
       WP = (t % 4) < 2 ? 0 : 1;
@@ -260,11 +273,11 @@ footer span { color: var(--muted); }
       for (var s = 0; s < sp.length; s++) {
         if ((t + s * 3) % 8 < 4) {
           var X = sp[s][0], Y = sp[s][1];
-          P(X, Y, AMB); P(X - 1, Y, AMB, 0.7); P(X + 1, Y, AMB, 0.7); P(X, Y - 1, AMB, 0.7); P(X, Y + 1, AMB, 0.7);
+          P(X, Y, TURQ); P(X - 1, Y, TURQ, 0.7); P(X + 1, Y, TURQ, 0.7); P(X, Y - 1, TURQ, 0.7); P(X, Y + 1, TURQ, 0.7);
         }
       }
     } else if (state === "sleep") {
-      WP = 2;
+      WP = 2; WV = 0;
       oy = 1 + Math.round(Math.sin(t / 8));
       amul = 0.72;
       body(oy, 0, pal.b, pal.l, null, amul); dust(oy, pal.l);
@@ -280,17 +293,21 @@ footer span { color: var(--muted); }
       WP = 0;
       oy = Math.round(Math.sin(t / 5) * 0.8);
       body(oy, -2, pal.b, pal.l, null, amul); dust(oy, pal.l);
-      ears(oy, -2, pal, { inner: AMB, ia: 0.55 + 0.45 * Math.sin(t / 2.5) }); eyes("open", oy, -2, t);
-      var pu = 0.55 + 0.45 * Math.sin(t / 2.5);
-      P(9, 8 + oy, AMB, pu); P(10, 8 + oy, AMB, pu); P(9, 9 + oy, AMB, pu); P(10, 9 + oy, AMB, pu);
-      for (var c = 17; c < W; c++) {
-        var hh = Math.floor((c - 15) * 0.95);
-        for (var dy = -hh; dy <= hh; dy++) {
-          if (((c + dy + t) % 3) === 0) P(c, 11 + dy, AMB, Math.max(0.12, 0.6 - (c - 17) * 0.07));
+      var pu = 0.6 + 0.4 * Math.sin(t / 2.5);
+      ears(oy, -2, pal, { inner: TURQ, ia: pu });
+      eyes("open", oy, -2, t);
+      var ay = 8 + oy;
+      for (var c = 11; c < W; c++) {
+        var cy = ay - (c - 10) * 0.5, hh = 0.6 + (c - 10) * 0.3;
+        for (var yy = Math.ceil(cy - hh); yy <= Math.floor(cy + hh); yy++) {
+          var core = Math.abs(yy - cy) < 0.6;
+          if (core || ((c + yy + t) % 3) === 0) P(c, yy, core ? TURQ_L : TURQ, Math.max(0.15, (core ? 0.9 : 0.6) - (c - 11) * 0.04));
         }
       }
+      P(9, ay, TURQ_L, 1); P(10, ay, TURQ_L, 1); P(9, ay + 1, TURQ, 1); P(10, ay + 1, TURQ, 1);
+      P(9, ay, WHITE, pu);
     } else if (state === "glitch") {
-      WP = Math.floor(hash(t, 5, 5) * 3);
+      WP = Math.floor(hash(t, 5, 5) * 3); WV = (t % 8) < 4 ? 1 : 0.3;
       oy = (t % 9 === 0) ? -1 : 0;
       var on = (t % 8) < 4;
       var yb = 6 + Math.floor(hash(t, 1, 7) * 12);
@@ -317,7 +334,7 @@ footer span { color: var(--muted); }
         for (var s2 = 0; s2 < 6; s2++) {
           var px = (p < 20 ? pos(cyc - 1) : pos(cyc)) + 12 + Math.round((hash(s2, cyc, 9) - .5) * 14);
           var py = 12 - ((p - 10) * 0.5) + Math.round((hash(s2, cyc, 5) - .5) * 8);
-          P(px, py, AMB, 0.8);
+          P(px, py, TURQ, 0.8);
         }
       }
     }
@@ -356,13 +373,12 @@ footer span { color: var(--muted); }
   function setPal(k) {
     palKey = k;
     var root = document.documentElement.style;
-    root.setProperty("--glow", PALS[k].glow);
-    root.setProperty("--accent", PALS[k].b);
     setPressed(); lastKey = "";
   }
   document.querySelectorAll("[data-pal]").forEach(function (el) {
     el.addEventListener("click", function () { setPal(el.getAttribute("data-pal")); });
   });
+  document.getElementById("mood").addEventListener("click", function () { moodOn = !moodOn; this.setAttribute("aria-pressed", moodOn ? "true" : "false"); lastKey = ""; });
   document.getElementById("auto").addEventListener("click", function () { auto = !auto; syncAuto(); });
   document.getElementById("big").addEventListener("click", function () { boostUntil = performance.now() + 2000; lastKey = ""; });
 
@@ -376,12 +392,17 @@ footer span { color: var(--muted); }
   function frame(now) {
     var tick = reduce ? 6 : Math.floor(now / 90);
     var eff = now < boostUntil ? "happy" : sel;
-    var key = tick + "|" + eff + "|" + palKey;
+    var key = tick + "|" + eff + "|" + palKey + "|" + moodOn;
     if (key !== lastKey) {
       lastKey = key;
-      var pal = PALS[palKey];
-      render(big, eff, tick, pal);
-      cells.forEach(function (c) { render(c.ctx, c.s.id, tick, pal); });
+      var mp = palFor(eff), rs = document.documentElement.style;
+      rs.setProperty("--glow", mp.glow); rs.setProperty("--accent", mp.b);
+      render(big, eff, tick, mp);
+      cells.forEach(function (c) {
+        var cp = palFor(c.s.id);
+        c.el.style.setProperty("--glow", cp.glow);
+        render(c.ctx, c.s.id, tick, cp);
+      });
     }
     requestAnimationFrame(frame);
   }
