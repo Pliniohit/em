@@ -10,8 +10,8 @@
   --paper: #ece7de;
   --muted: #9b94aa;
   --turq: #30d5c8;
-  --glow: rgba(255, 156, 207, .55);
-  --accent: #ff9ccf;
+  --glow: rgba(185, 162, 255, .55);
+  --accent: #b9a2ff;
   --display: "Fraunces", Georgia, "Times New Roman", serif;
   --body: "Hanken Grotesk", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
@@ -68,7 +68,7 @@ footer span { color: var(--muted); }
   <header>
     <div class="eyebrow">Visões Filmes · quinta rodada · 26/10/2026</div>
     <h1>Quimerinha de <em>luz</em> em pixel art</h1>
-    <p>Refeito a partir das suas referências: contorno índigo grosso, três tons de sombra, brilhos de estrela e asinhas fofas de anjo, arredondadas, sem o ar de morcego. Mesmos oito comportamentos, mesmo humor que muda cor e asas.</p>
+    <p>Refeito a partir das suas referências: contorno índigo grosso, três tons de sombra, brilhos de estrela e asinhas fofas de anjo, arredondadas, sem o ar de morcego. A cor de casa é o lilás. De vez em quando ela muda de repente, segura a cor por uns dois segundos e volta.</p>
   </header>
 
   <section class="live" aria-label="Bicho ao vivo">
@@ -78,17 +78,17 @@ footer span { color: var(--muted); }
       <p class="state-use" id="suse">Ocioso, esperando você.</p>
       <div class="ctl" role="group" aria-label="Cor do corpo">
         <div class="ctl-label">Cor base</div>
-        <button class="chip" type="button" id="pal-rosa" data-pal="rosa" aria-pressed="true"><i style="background:#ff9ccf"></i>Rosa</button>
-        <button class="chip" type="button" id="pal-lilas" data-pal="lilas" aria-pressed="false"><i style="background:#b9a2ff"></i>Lilás</button>
+        <button class="chip" type="button" id="pal-rosa" data-pal="rosa" aria-pressed="false"><i style="background:#ff9ccf"></i>Rosa</button>
+        <button class="chip" type="button" id="pal-lilas" data-pal="lilas" aria-pressed="true"><i style="background:#b9a2ff"></i>Lilás</button>
         <button class="chip" type="button" id="pal-menta" data-pal="menta" aria-pressed="false"><i style="background:#5ee0a8"></i>Menta</button>
         <button class="chip" type="button" id="pal-ciano" data-pal="ciano" aria-pressed="false"><i style="background:#6fd8ea"></i>Ciano</button>
-        <button class="chip" type="button" id="mood" aria-pressed="true">Muda com a emoção</button>
+        <button class="chip" type="button" id="mood" aria-pressed="true">Muda de cor de repente</button>
       </div>
       <div class="ctl" role="group" aria-label="Ciclo">
         <div class="ctl-label">Ciclo</div>
         <button class="chip" type="button" id="auto" aria-pressed="true">Passar pelos estados sozinho</button>
       </div>
-      <p class="hint">Toque no bicho para ele ficar feliz por dois segundos. Toque em um estado abaixo para fixar.</p>
+      <p class="hint">Toque no bicho para ele ficar feliz por dois segundos. Toque em um estado abaixo para fixar. A mudança de cor acontece ao entrar no estado e de novo a cada nove segundos.</p>
     </div>
   </section>
 
@@ -119,8 +119,37 @@ footer span { color: var(--muted); }
     happy: { b: "#ffb08f", l: "#fff0e6", d: "#e0805c", glow: "rgba(255,176,143,.55)" },
     sleep: { b: "#8a86b8", l: "#d9d6f0", d: "#615d8f", glow: "rgba(138,134,184,.35)" }
   };
-  var moodOn = true, palKey = "rosa";
-  function palFor(state) { return (moodOn && MOOD[state]) ? MOOD[state] : PALS[palKey]; }
+  MOOD.project = { b: "#6fe0d4", l: "#dcfffa", d: "#2fa89b" };
+  MOOD.glitch = { b: "#ff6fbf", l: "#ffd0ea", d: "#c93a7f" };
+  MOOD.tele = { b: "#a8c8ff", l: "#eaf2ff", d: "#6d8fd6" };
+  var ROT = [MOOD.think, MOOD.work, MOOD.happy];
+  var moodOn = true, palKey = "lilas";
+  function rgb(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+  function mixc(a, b, w) {
+    var x = rgb(a), y = rgb(b), o = "#";
+    for (var i = 0; i < 3; i++) { var v = Math.round(x[i] + (y[i] - x[i]) * w).toString(16); o += v.length < 2 ? "0" + v : v; }
+    return o;
+  }
+  function mixPal(p, q, w) {
+    var b = mixc(p.b, q.b, w), c = rgb(b);
+    return { b: b, l: mixc(p.l, q.l, w), d: mixc(p.d, q.d, w), glow: "rgba(" + c[0] + "," + c[1] + "," + c[2] + ",.5)" };
+  }
+  /* a cor muda de repente, segura um instante e volta para a base */
+  function env(ms) {
+    var m = ms % 9000;
+    if (m < 250) return m / 250;
+    if (m < 1950) return 1;
+    if (m < 2850) return 1 - (m - 1950) / 900;
+    return 0;
+  }
+  function palAt(state, ms) {
+    var base = PALS[palKey];
+    if (!moodOn) return base;
+    var q = MOOD[state];
+    if (state === "idle" || !q) q = ROT[Math.floor(hash(Math.floor(ms / 9000), 7, 7) * 3)];
+    var w = env(ms);
+    return w <= 0 ? base : mixPal(base, q, w);
+  }
   var STATES = [
     { id: "idle", nome: "Flutuando", uso: "Ocioso, esperando você." },
     { id: "think", nome: "Pensando", uso: "Lendo arquivos, raciocinando antes de responder. As asas ficam tímidas, meio apagadas." },
@@ -185,15 +214,35 @@ footer span { color: var(--muted); }
         for (var c = 0; c < 6; c++) {
           var ch = w[r][c];
           if (ch === ".") continue;
-          var px = c - 3;
+          var px = c - 5;
           if (WV < 1 && hash(px + side * 7, y0 + r, 3) >= WV) continue;
           var X = side ? 23 - px : px;
-          P(X + ox, y0 + r + oy + wb, ch === "s" ? colD : colL, 0.9 * aMul);
+          P(X + ox, y0 + r + oy + wb, ch === "s" ? colD : colL, 0.72 * aMul);
         }
       }
     }
   }
 
+  var TL = 0;
+  var TAIL = [
+    [[18, 16], [19, 17], [20, 17], [21, 17], [22, 16], [22, 15]],
+    [[18, 16], [19, 17], [20, 17], [21, 17], [22, 17], [23, 16]]
+  ];
+  /* rabinho: aparece de vez em quando; sempre quando feliz (abana) e dormindo (parado) */
+  function tail(oy, ox, col, colL, colD, aMul) {
+    var ph = T % 120, f = 1;
+    if (TL === 0) {
+      if (ph >= 40) return;
+      f = ph < 4 ? ph / 4 : (ph >= 36 ? (40 - ph) / 4 : 1);
+    }
+    var fr = TAIL[TL === 2 ? 0 : (Math.floor(T / 4) % 2)];
+    for (var k = 0; k < fr.length; k++) {
+      if (f < 1 && hash(k, T >> 2, 9) >= f) continue;
+      var tip = k === fr.length - 1;
+      P(fr[k][0] + ox, fr[k][1] + oy, tip ? colL : col, 0.78 * aMul);
+      if (!tip) P(fr[k][0] + ox, fr[k][1] + 1 + oy, colD, 0.6 * aMul);
+    }
+  }
   var HW = [2, 4, 6, 7, 8, 8, 8, 8, 8, 8, 7, 7];
   function vis(x, i) {
     if (i <= 6) return true;
@@ -205,12 +254,13 @@ footer span { color: var(--muted); }
   }
   function body(oy, ox, col, colL, colD, rowShift, aMul) {
     wings(oy, ox, colL, colD, aMul);
+    tail(oy, ox, col, colL, colD, aMul);
     for (var i = 0; i < HW.length; i++) {
       var y = 6 + i + oy, hw = HW[i], sh = rowShift ? rowShift(y) : 0;
       for (var x = 12 - hw; x <= 11 + hw; x++) {
         if (!vis(x, i)) continue;
         var edge = (x === 12 - hw || x === 11 + hw || i === 0);
-        var a = (0.92 - i * 0.045) * (edge ? 1 : 0.82) * aMul;
+        var a = (0.92 - i * 0.045) * (edge ? 0.95 : 0.55) * aMul;
         var c = (edge || (i <= 3 && x >= 7 && x <= 11)) ? colL : (((x >= 14 && i >= 3) || i >= 7) ? colD : col);
         P(x + ox + sh, y, c, a);
       }
@@ -226,13 +276,13 @@ footer span { color: var(--muted); }
   function ears(oy, ox, pal, o) {
     var ic = o.inner || PINK, ia = o.ia == null ? 0.9 : o.ia, am = o.droop ? 0.7 : 1;
     for (var side = 0; side < 2; side++) {
-      P((side ? 17 : 6) + ox, 7 + oy, pal.b, 0.8); P((side ? 16 : 7) + ox, 7 + oy, pal.b, 0.8);
+      P((side ? 17 : 6) + ox, 7 + oy, pal.b, 0.6); P((side ? 16 : 7) + ox, 7 + oy, pal.b, 0.6);
       var dy = (side ? o.rd : o.ld) || 0, dx = 0;
       if (o.droop) { dy += 1; dx = side ? 1 : -1; }
       for (var k = 0; k < EAR.length; k++) {
         var p = EAR[k], x = side ? 23 - p[0] : p[0];
         var col = p[2] === "e" ? pal.l : (p[2] === "i" ? ic : pal.b);
-        var a = (p[2] === "e" ? 1 : (p[2] === "i" ? ia : 0.8)) * am;
+        var a = (p[2] === "e" ? 0.95 : (p[2] === "i" ? ia : 0.6)) * am;
         P(x + dx + ox, p[1] + dy + oy, col, a);
       }
     }
@@ -260,7 +310,7 @@ footer span { color: var(--muted); }
   }
 
   function render(ctx, state, t, pal) {
-    C = ctx; T = t; MASK = null; WV = 1;
+    C = ctx; T = t; MASK = null; WV = 1; TL = 0;
     ctx.clearRect(0, 0, W, W); FX.clearRect(0, 0, W, W);
     var oy = 0, ox = 0, amul = 1, pd = pal.d;
 
@@ -289,7 +339,7 @@ footer span { color: var(--muted); }
         E(11.5 + Math.cos(ang - .35) * 12.5, 11 + Math.sin(ang - .35) * 7, TURQ, 0.45);
       }
     } else if (state === "happy") {
-      WP = (t % 4) < 2 ? 0 : 1;
+      TL = 1; WP = (t % 4) < 2 ? 0 : 1;
       oy = -Math.round(Math.abs(Math.sin(t / 2.2)) * 3);
       body(oy, 0, pal.b, pal.l, pd, null, amul); dust(oy, pal.l);
       var wv = (t % 6) < 3;
@@ -298,7 +348,7 @@ footer span { color: var(--muted); }
       var sp = [[-3, 3, 0, HOT], [26, 6, 3, TURQ], [-4, 15, 5, TURQ], [27, 17, 8, HOT], [11, -3, 2, HOT]];
       for (var s = 0; s < sp.length; s++) if ((t + sp[s][2]) % 8 < 5) star4(sp[s][0], sp[s][1], (t + sp[s][2]) % 8 < 3 ? 2 : 1, sp[s][3], WHITE);
     } else if (state === "sleep") {
-      WP = 2; WV = 0;
+      TL = 2; WP = 2; WV = 0;
       oy = 1 + Math.round(Math.sin(t / 8)); amul = 0.75;
       body(oy, 0, pal.b, pal.l, pd, null, amul); dust(oy, pal.l);
       ears(oy, 0, pal, { droop: true }); eyes("closed", oy, 0, t);
@@ -374,14 +424,14 @@ footer span { color: var(--muted); }
     b.addEventListener("click", function () { auto = false; syncAuto(); select(s.id); });
   });
 
-  var sel = "idle", auto = true, boostUntil = 0, lastKey = "";
+  var sel = "idle", auto = true, boostUntil = 0, lastKey = "", stateStart = performance.now();
   function setPressed() {
     cells.forEach(function (c) { c.el.setAttribute("aria-pressed", c.s.id === sel ? "true" : "false"); });
     document.querySelectorAll("[data-pal]").forEach(function (el) { el.setAttribute("aria-pressed", el.getAttribute("data-pal") === palKey ? "true" : "false"); });
   }
   function syncAuto() { document.getElementById("auto").setAttribute("aria-pressed", auto ? "true" : "false"); }
   function select(id) {
-    sel = id;
+    sel = id; stateStart = performance.now();
     var s = STATES.filter(function (x) { return x.id === id; })[0];
     document.getElementById("sname").textContent = s.nome;
     document.getElementById("suse").textContent = s.uso;
@@ -400,26 +450,27 @@ footer span { color: var(--muted); }
     if (!auto || reduce) return;
     idx = (idx + 1) % STATES.length;
     select(STATES[idx].id);
-  }, 4200);
+  }, 5600);
 
   function frame(now) {
-    var tick = reduce ? 6 : Math.floor(now / 90);
+    var tick = reduce ? 6 : Math.floor(now / 160);
     var eff = now < boostUntil ? "happy" : sel;
     var key = tick + "|" + eff + "|" + palKey + "|" + moodOn;
     if (key !== lastKey) {
       lastKey = key;
-      var mp = palFor(eff), rs = document.documentElement.style;
+      var msMain = now < boostUntil ? now - (boostUntil - 2000) : now - stateStart;
+      var mp = palAt(eff, msMain), rs = document.documentElement.style;
       rs.setProperty("--glow", mp.glow); rs.setProperty("--accent", mp.b);
       render(big, eff, tick, mp);
-      cells.forEach(function (c) {
-        var cp = palFor(c.s.id);
+      cells.forEach(function (c, ci) {
+        var cp = palAt(c.s.id, now + ci * 1100);
         c.el.style.setProperty("--glow", cp.glow);
         render(c.ctx, c.s.id, tick, cp);
       });
     }
     requestAnimationFrame(frame);
   }
-  select("idle"); setPal("rosa"); syncAuto();
+  select("idle"); setPal("lilas"); syncAuto();
   requestAnimationFrame(frame);
 })();
 </script>
