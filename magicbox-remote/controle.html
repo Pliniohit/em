@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0e0f12">
+<title>Controle Projetor</title>
+<style>
+  :root {
+    --bg: #0e0f12; --painel: #17191f; --tecla: #22252d; --tecla-on: #353a46;
+    --texto: #e9e6df; --suave: #8c8a85; --acento: #e0a84f; --borda: #2c2f38;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--texto);
+    font: 15px/1.3 -apple-system, "Helvetica Neue", sans-serif;
+    -webkit-user-select: none; user-select: none; overscroll-behavior: none; }
+  main { max-width: 480px; margin: 0 auto;
+    padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  h1 { font: 600 22px/1 Georgia, "Times New Roman", serif; margin: 0; letter-spacing: .01em; }
+  #status { font-size: 12px; color: var(--suave); }
+  #status.erro { color: #e66a5c; }
+  .rotulo { font: italic 13px Georgia, serif; color: var(--suave); margin: 14px 0 6px; }
+
+  #pad { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 14px;
+    background: var(--painel); border: 1px solid var(--borda); touch-action: none; overflow: hidden; }
+  #pad::after { content: "1 dedo move · toque clica · segure = toque longo · 2 dedos rolam";
+    position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--suave); pointer-events: none; }
+  #cursor { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+    background: var(--acento); box-shadow: 0 0 0 4px rgba(224,168,79,.25); pointer-events: none; transition: transform .08s; }
+  #cursor.clique { transform: scale(1.8); }
+
+  .linha { display: grid; gap: 8px; margin-top: 8px; }
+  .l2 { grid-template-columns: 1fr 1fr; }
+  .l4 { grid-template-columns: repeat(4, 1fr); }
+  button { appearance: none; border: 1px solid var(--borda); background: var(--tecla); color: var(--texto);
+    border-radius: 12px; padding: 14px 6px; font: 500 14px -apple-system, sans-serif; touch-action: manipulation; }
+  button:active, button.on { background: var(--tecla-on); }
+  button.acento { color: var(--acento); }
+
+  #dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 62px);
+    gap: 8px; width: 100%; max-width: 260px; margin: 8px auto 0; }
+  #dpad button { font-size: 20px; padding: 0; }
+  #dpad .ok { border-radius: 50%; color: var(--acento); font: 600 15px Georgia, serif; }
+
+  .teclado { display: flex; gap: 8px; margin-top: 8px; }
+  .teclado input { flex: 1; min-width: 0; border-radius: 12px; border: 1px solid var(--borda);
+    background: var(--painel); color: var(--texto); padding: 12px; font-size: 16px; -webkit-user-select: text; user-select: text; }
+  .teclado button { padding: 12px 14px; }
+  .ajuste { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 12px; color: var(--suave); }
+  .ajuste input { flex: 1; accent-color: var(--acento); }
+  small.nota { display: block; margin-top: 6px; font-size: 11px; color: var(--suave); }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Controle Projetor</h1><span id="status">pronto</span></header>
+
+  <div id="pad"><div id="cursor"></div></div>
+  <div class="linha l2">
+    <button class="acento" data-acao="clicar">Clicar</button>
+    <button data-acao="segurar">Toque longo</button>
+  </div>
+
+  <div class="rotulo">Navegação</div>
+  <div id="dpad">
+    <span></span><button data-k="UP">▲</button><span></span>
+    <button data-k="LEFT">◀</button><button class="ok" data-k="OK">OK</button><button data-k="RIGHT">▶</button>
+    <span></span><button data-k="DOWN">▼</button><span></span>
+  </div>
+  <div class="linha l4">
+    <button data-k="BACK">Voltar</button><button data-k="HOME">Início</button>
+    <button data-k="MENU">Menu</button><button data-k="RECENTES">Apps</button>
+  </div>
+  <div class="linha l4">
+    <button data-k="VOL_DOWN">Vol −</button><button data-k="MUTE">Mudo</button>
+    <button data-k="VOL_UP">Vol +</button><button data-k="PLAY_PAUSE">▶︎❚❚</button>
+  </div>
+
+  <div class="rotulo">Teclado</div>
+  <div class="teclado">
+    <input id="txt" type="text" placeholder="digite: vai direto pra tela" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send">
+    <button data-k="DEL">⌫</button>
+    <button data-k="ENTER">↵</button>
+  </div>
+  <small class="nota">Acentos são removidos (limite do Android: “ação” sai “acao”).</small>
+
+  <label class="ajuste">Sensibilidade <input id="sens" type="range" min="0.5" max="4" step="0.1" value="1.6"></label>
+</main>
+
+<script>
+const token = new URLSearchParams(location.search).get("k") || "";
+const statusEl = document.getElementById("status");
+let fila = Promise.resolve();
+
+// Fila em série: a ordem dos comandos (texto, apagar, toque) é preservada.
+function enviar(cmd) {
+  fila = fila.then(() => fetch("/cmd?k=" + encodeURIComponent(token), {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cmd)
+    }).then(r => {
+      statusEl.textContent = r.ok ? "conectado" : "erro " + r.status;
+      statusEl.className = r.ok ? "" : "erro";
+    }).catch(() => { statusEl.textContent = "sem conexão"; statusEl.className = "erro"; }));
+}
+
+// ---- Botões de tecla ----
+document.querySelectorAll("[data-k]").forEach(b => {
+  b.addEventListener("click", () => enviar({ t: "key", k: b.dataset.k }));
+});
+
+// ---- Touchpad com cursor virtual ----
+// O Android não mostra ponteiro de mouse via adb, então o cursor aparece aqui,
+// no retângulo 16:9 que representa a tela projetada.
+const pad = document.getElementById("pad");
+const cursorEl = document.getElementById("cursor");
+const sens = document.getElementById("sens");
+const cur = { x: 0.5, y: 0.5 };
+let toque = null;
+
+function desenhar() {
+  cursorEl.style.left = (cur.x * 100) + "%";
+  cursorEl.style.top = (cur.y * 100) + "%";
+}
+function piscar() {
+  cursorEl.classList.add("clique");
+  setTimeout(() => cursorEl.classList.remove("clique"), 120);
+}
+const limitar = v => Math.min(1, Math.max(0, v));
+function clicar() { piscar(); enviar({ t: "tap", x: cur.x, y: cur.y }); }
+function segurar() { piscar(); enviar({ t: "longtap", x: cur.x, y: cur.y }); }
+
+pad.addEventListener("touchstart", e => {
+  e.preventDefault();
+  const t = e.touches;
+  if (!toque) toque = { inicio: Date.now(), dist: 0, dedos: t.length, rolagem: 0 };
+  toque.dedos = Math.max(toque.dedos, t.length);
+  toque.ultX = t[0].clientX; toque.ultY = t[0].clientY;
+}, { passive: false });
+
+pad.addEventListener("touchmove", e => {
+  e.preventDefault();
+  if (!toque) return;
+  const t = e.touches[0];
+  const dx = t.clientX - toque.ultX, dy = t.clientY - toque.ultY;
+  toque.ultX = t.clientX; toque.ultY = t.clientY;
+  toque.dist += Math.abs(dx) + Math.abs(dy);
+  const r = pad.getBoundingClientRect();
+  if (toque.dedos >= 2) {
+    toque.rolagem += dy / r.height;
+  } else {
+    const k = parseFloat(sens.value);
+    cur.x = limitar(cur.x + dx / r.width * k);
+    cur.y = limitar(cur.y + dy / r.height * k);
+    desenhar();
+  }
+}, { passive: false });
+
+pad.addEventListener("touchend", e => {
+  e.preventDefault();
+  if (!toque || e.touches.length) return;   // espera todos os dedos saírem
+  const dur = Date.now() - toque.inicio;
+  if (toque.dedos >= 2) {
+    if (Math.abs(toque.rolagem) > 0.04) {
+      // arrasto na tela a partir do cursor, no mesmo sentido dos dedos
+      const y2 = limitar(cur.y + toque.rolagem * 1.5);
+      enviar({ t: "swipe", x1: cur.x, y1: cur.y, x2: cur.x, y2, ms: 300 });
+    }
+  } else if (toque.dist < 8) {
+    if (dur > 550) segurar(); else clicar();
+  }
+  toque = null;
+}, { passive: false });
+
+document.querySelector('[data-acao="clicar"]').addEventListener("click", clicar);
+document.querySelector('[data-acao="segurar"]').addEventListener("click", segurar);
+
+// ---- Teclado ao vivo: cada letra vai para a tela; apagar no iPhone apaga lá ----
+const txt = document.getElementById("txt");
+let anterior = "";
+txt.addEventListener("input", () => {
+  const novo = txt.value;
+  let comum = 0;
+  while (comum < anterior.length && comum < novo.length && anterior[comum] === novo[comum]) comum++;
+  for (let i = 0; i < anterior.length - comum; i++) enviar({ t: "key", k: "DEL" });
+  const acrescimo = novo.slice(comum);
+  if (acrescimo) enviar({ t: "text", s: acrescimo });
+  anterior = novo;
+});
+txt.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    enviar({ t: "key", k: "ENTER" });
+    txt.value = ""; anterior = "";
+  }
+});
+
+try { const s = localStorage.getItem("sens"); if (s) sens.value = s; } catch (_) {}
+sens.addEventListener("change", () => { try { localStorage.setItem("sens", sens.value); } catch (_) {} });
+desenhar();
+</script>
+</body>
+</html>
