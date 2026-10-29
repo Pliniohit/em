@@ -1,0 +1,400 @@
+<title>Ilha de Edição VF</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ilha de edição — coluna única, slate de envio no topo, fila de jobs como claquetes abaixo */
+:root{
+  --bg:#0d0f14; --panel:#151821; --line:#262b38; --fg:#e8e4dc; --muted:#8d93a3;
+  --tungsten:#f0a64a; --tungsten-dim:#3a2a16;
+  --ok:#5fbf8f; --warn:#e3b341; --err:#e5675c; --info:#7aa2f7;
+  --display:"Instrument Serif", "Times New Roman", Georgia, serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0;letter-spacing:.005em}
+h1{font-size:clamp(2.2rem,7vw,3.4rem);line-height:1}
+h1 em{color:var(--tungsten)}
+h2{font-size:1.7rem}
+h3{font-size:1.35rem}
+.tc{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--muted);font-size:.8rem;letter-spacing:.06em}
+.lede{color:var(--muted);max-width:60ch;margin:6px 0 0}
+header{display:flex;flex-direction:column;gap:6px}
+.status-bar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.pill{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.on{border-color:var(--ok);color:var(--ok)}
+.pill.off{border-color:var(--err);color:var(--err)}
+.pill.s-enviado{border-color:var(--info);color:var(--info)}
+.pill.s-editando{border-color:var(--warn);color:var(--warn)}
+.pill.s-pronto{border-color:var(--ok);color:var(--ok)}
+.pill.s-erro{border-color:var(--err);color:var(--err)}
+.pill.s-rascunho{border-color:var(--line);color:var(--muted)}
+
+/* Slate de envio */
+.slate{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.slate-top{height:14px;background:repeating-linear-gradient(-45deg,var(--fg) 0 14px,var(--bg) 14px 28px);opacity:.85}
+.slate-body{padding:20px;display:flex;flex-direction:column;gap:18px}
+.drop{border:1.5px dashed var(--line);border-radius:6px;padding:26px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over,.drop:focus-visible{border-color:var(--tungsten);background:var(--tungsten-dim);outline:none}
+.drop strong{display:block;font-family:var(--display);font-size:1.5rem;font-weight:400}
+.drop small{color:var(--muted)}
+.files{display:flex;flex-direction:column;gap:6px}
+.file{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:4px;min-width:0}
+.file .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.bar{grid-column:1/-1;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--tungsten);transition:width .2s}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+input[type=text],select,textarea{font:inherit;font-size:15px;text-transform:none;letter-spacing:0;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:9px 10px;width:100%;box-sizing:border-box}
+textarea{min-height:90px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--tungsten);outline-offset:1px}
+fieldset{border:1px solid var(--line);border-radius:4px;padding:10px 12px 12px;margin:0}
+legend{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0 6px}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px 14px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-size:.92rem;cursor:pointer}
+.checks input{accent-color:var(--tungsten);margin-top:4px}
+.checks .note{color:var(--muted);font-size:.78rem}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+button{font:inherit;font-weight:600;cursor:pointer;border-radius:4px;padding:10px 18px;border:1px solid var(--tungsten);background:var(--tungsten);color:#1a1206}
+button.ghost{background:transparent;color:var(--fg);border-color:var(--line);font-weight:500}
+button:disabled{opacity:.45;cursor:not-allowed}
+.msg{font-size:.9rem;color:var(--muted)}
+.msg.err{color:var(--err)}
+.msg.ok{color:var(--ok)}
+
+/* Fila */
+.queue{display:flex;flex-direction:column;gap:12px}
+.job{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.job-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;align-items:baseline}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.78rem;padding:2px 8px;border-radius:3px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.job p{margin:0;color:var(--muted);font-size:.92rem;overflow-wrap:anywhere}
+.result{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px}
+video{width:100%;max-width:100%;border-radius:4px;background:#000}
+.empty{border:1px dashed var(--line);border-radius:6px;padding:22px;color:var(--muted)}
+.empty b{color:var(--fg);font-weight:500}
+.how{color:var(--muted);font-size:.9rem;max-width:65ch}
+.how code{font-family:var(--mono);color:var(--tungsten);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="tc" id="tc">VF · ILHA 01 · 00:00:00:00</span>
+    <h1>Ilha de Edição <em>VF</em></h1>
+    <p class="lede">Suba o material bruto, descreva o corte e deixe na fila. O Claude baixa daqui, edita com ffmpeg e auto-editor e devolve o render neste mesmo job.</p>
+    <div class="status-bar" id="caps">
+      <span class="pill" id="cap-db">banco …</span>
+      <span class="pill" id="cap-assets">upload …</span>
+      <span class="tc" id="quota"></span>
+    </div>
+  </header>
+
+  <section class="slate" aria-labelledby="novo">
+    <div class="slate-top"></div>
+    <form class="slate-body" id="form" autocomplete="off">
+      <h2 id="novo">Novo job</h2>
+
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Escolher vídeos">
+        <strong>Solte os vídeos aqui</strong>
+        <small>ou toque para escolher · MP4, MOV, WEBM · arquivos grandes são enviados em partes de 19 MB</small>
+        <input type="file" id="pick" accept="video/*,.mov,.mp4,.webm,.mkv" multiple hidden>
+      </div>
+      <div class="files" id="files"></div>
+
+      <div class="grid">
+        <label class="f">Nome do job
+          <input type="text" id="titulo" placeholder="Ex.: Reels bastidores Titanic">
+        </label>
+        <label class="f">Formato de saída
+          <select id="formato">
+            <option value="9:16">9:16 · Reels / TikTok / Shorts</option>
+            <option value="16:9">16:9 · YouTube / telão</option>
+            <option value="1:1">1:1 · feed quadrado</option>
+            <option value="4:5">4:5 · feed vertical</option>
+            <option value="original">Manter original</option>
+          </select>
+        </label>
+        <label class="f">Tipo de material
+          <select id="tipo">
+            <option>Talking head / depoimento</option>
+            <option>Aftermovie / evento</option>
+            <option>Bastidores de montagem</option>
+            <option>Registro de projeção / VJ</option>
+            <option>Tutorial / tela</option>
+            <option>Teaser / vinheta</option>
+          </select>
+        </label>
+        <label class="f">Duração alvo
+          <input type="text" id="duracao" placeholder="Ex.: 30 s, 1 min, livre">
+        </label>
+      </div>
+
+      <fieldset>
+        <legend>O que fazer</legend>
+        <div class="checks">
+          <label><input type="checkbox" id="c-silencio" checked> <span>Cortar silêncios e pausas</span></label>
+          <label><input type="checkbox" id="c-takes"> <span>Tirar takes repetidos e erros<br><span class="note">precisa de transcrição</span></span></label>
+          <label><input type="checkbox" id="c-legenda"> <span>Legenda queimada<br><span class="note">precisa de transcrição</span></span></label>
+          <label><input type="checkbox" id="c-cor"> <span>Correção de cor</span></label>
+          <label><input type="checkbox" id="c-audio" checked> <span>Normalizar áudio (−14 LUFS)</span></label>
+          <label><input type="checkbox" id="c-reframe"> <span>Reenquadrar para o formato</span></label>
+          <label><input type="checkbox" id="c-xml"> <span>Exportar XML para Premiere / Resolve</span></label>
+          <label><input type="checkbox" id="c-plano"> <span>Me mostrar o plano antes de renderizar</span></label>
+        </div>
+      </fieldset>
+
+      <label class="f">Direção de corte
+        <textarea id="notas" placeholder="Ritmo, ordem das cenas, trechos obrigatórios, referência de estilo, trilha, o que não pode entrar."></textarea>
+      </label>
+
+      <div class="row">
+        <span class="msg" id="formmsg">Nenhum vídeo escolhido.</span>
+        <button type="submit" id="enviar" disabled>Enviar para a fila</button>
+      </div>
+    </form>
+  </section>
+
+  <section aria-labelledby="fila" style="display:flex;flex-direction:column;gap:14px">
+    <div class="row"><h2 id="fila">Fila de edição</h2><span class="tc" id="count"></span></div>
+    <div class="queue" id="queue">
+      <div class="empty"><b>Nenhum job na fila.</b> Escolha os vídeos acima, preencha a direção de corte e toque em <b>Enviar para a fila</b>. Cada job aparece aqui com o status: enviado, editando, pronto.</div>
+    </div>
+    <p class="how">Depois de enviar, escreva no chat do Claude: <code>edite a fila</code>. O render volta para o job com um player e o botão de salvar.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  const CHUNK = 19 * 1024 * 1024;
+  const $ = id => document.getElementById(id);
+  let db = null, assets = null, downloads = null;
+  let picked = [];
+  let jobsCache = [];
+
+  // relógio em timecode 25 fps
+  setInterval(() => {
+    const d = new Date(), f = Math.floor(d.getMilliseconds() / 40);
+    const p = n => String(n).padStart(2, "0");
+    $("tc").textContent = `VF · ILHA 01 · ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}:${p(f)}`;
+  }, 200);
+
+  const fmtMB = b => (b / 1048576).toFixed(b > 104857600 ? 0 : 1) + " MB";
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  function setCap(el, ok, label){ el.textContent = label; el.className = "pill " + (ok ? "on" : "off"); }
+
+  // ---------- escolha de arquivos ----------
+  const drop = $("drop"), pick = $("pick");
+  drop.addEventListener("click", () => pick.click());
+  drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick.click(); } });
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); });
+  pick.addEventListener("change", () => { addFiles(pick.files); pick.value = ""; });
+
+  function addFiles(list){
+    for (const f of list) if (f.type.startsWith("video/") || /\.(mov|mp4|webm|mkv|m4v)$/i.test(f.name)) picked.push({ file: f, pct: 0 });
+    renderPicked();
+  }
+  function renderPicked(){
+    $("files").innerHTML = picked.map((p, i) => `
+      <div class="file">
+        <span class="nm">${esc(p.file.name)}</span>
+        <span class="tc">${fmtMB(p.file.size)} · ${Math.max(1, Math.ceil(p.file.size / CHUNK))} parte(s)</span>
+        <div class="bar"><i id="bar${i}" style="width:${p.pct}%"></i></div>
+      </div>`).join("");
+    const total = picked.reduce((s, p) => s + p.file.size, 0);
+    $("formmsg").className = "msg";
+    $("formmsg").textContent = picked.length ? `${picked.length} vídeo(s) · ${fmtMB(total)}` : "Nenhum vídeo escolhido.";
+    $("enviar").disabled = !(picked.length && db && assets);
+  }
+
+  // Corta em partes de ~19 MB. Uma parte não pode começar com "<" (nem espaço antes dele),
+  // senão o armazenamento recusa como markup; nesse caso a fronteira anda alguns bytes.
+  async function boundaries(file){
+    const cuts = [0];
+    let b = CHUNK;
+    while (b < file.size){
+      const head = new Uint8Array(await file.slice(b, Math.min(b + 64, file.size)).arrayBuffer());
+      let k = 0;
+      while (k < head.length && (head[k] === 0x3C || head[k] === 0x20 || head[k] === 0x09 || head[k] === 0x0A || head[k] === 0x0D || head[k] === 0x0C)) k++;
+      b += k;
+      if (b >= file.size) break;
+      cuts.push(b);
+      b += CHUNK;
+    }
+    cuts.push(file.size);
+    return cuts;
+  }
+
+  async function uploadFile(p, i){
+    const cuts = await boundaries(p.file);
+    const parts = [];
+    const type = /webm$/i.test(p.file.name) ? "video/webm" : "video/mp4";
+    for (let c = 0; c < cuts.length - 1; c++){
+      const blob = p.file.slice(cuts[c], cuts[c + 1]);
+      let res;
+      try { res = await assets.upload(blob, { type }); }
+      catch (e) {
+        if (e && e.code === "store_unavailable") { await new Promise(r => setTimeout(r, 1500)); res = await assets.upload(blob, { type }); }
+        else throw e;
+      }
+      parts.push(res.id);
+      p.pct = Math.round(cuts[c + 1] / p.file.size * 100);
+      const bar = $("bar" + i); if (bar) bar.style.width = p.pct + "%";
+    }
+    return { name: p.file.name, size: p.file.size, mime: p.file.type || "", parts };
+  }
+
+  $("form").addEventListener("submit", async e => {
+    e.preventDefault();
+    if (!picked.length || !db || !assets) return;
+    const btn = $("enviar"), msg = $("formmsg");
+    btn.disabled = true; msg.className = "msg"; msg.textContent = "Enviando…";
+    const now = new Date().toISOString();
+    const brief = {
+      formato: $("formato").value, tipo: $("tipo").value, duracao: $("duracao").value.trim(),
+      silencio: $("c-silencio").checked, takes: $("c-takes").checked, legenda: $("c-legenda").checked,
+      cor: $("c-cor").checked, audio: $("c-audio").checked, reframe: $("c-reframe").checked,
+      xml: $("c-xml").checked, plano: $("c-plano").checked, notas: $("notas").value.trim()
+    };
+    const titulo = $("titulo").value.trim() || picked[0].file.name.replace(/\.[^.]+$/, "");
+    let ref;
+    try {
+      ref = await db.collection("jobs").add({ titulo, status: "rascunho", criado: now, brief, clips: [], nota_claude: "" });
+      const clips = [];
+      for (let i = 0; i < picked.length; i++){
+        msg.textContent = `Enviando ${i + 1} de ${picked.length}: ${picked[i].file.name}`;
+        clips.push(await uploadFile(picked[i], i));
+      }
+      await ref.update({ clips, status: "enviado", enviado: new Date().toISOString() });
+      picked = []; renderPicked();
+      $("titulo").value = ""; $("notas").value = ""; $("duracao").value = "";
+      msg.className = "msg ok"; msg.textContent = "Na fila. Agora escreva no chat: edite a fila.";
+    } catch (err) {
+      const code = err && err.code;
+      const why = {
+        too_large: "uma parte passou de 20 MB",
+        unsupported_type: "o armazenamento recusou o tipo do arquivo",
+        quota_or_state: "acabou o espaço de armazenamento desta página; apague jobs antigos",
+        rate_limited: "muitos envios seguidos; espere um minuto e tente de novo",
+        not_granted: "esta visualização não tem permissão de upload; abra como dona do artifact"
+      }[code] || (err && err.message) || "erro desconhecido";
+      msg.className = "msg err"; msg.textContent = "Falhou: " + why + ".";
+      if (ref) try { await ref.update({ status: "erro", erro_envio: why }); } catch(_){}
+      btn.disabled = false;
+    }
+    refreshQuota();
+  });
+
+  // ---------- fila ----------
+  function chips(b){
+    const on = [];
+    if (b.silencio) on.push("silêncios"); if (b.takes) on.push("takes"); if (b.legenda) on.push("legenda");
+    if (b.cor) on.push("cor"); if (b.audio) on.push("áudio −14 LUFS"); if (b.reframe) on.push("reenquadrar");
+    if (b.xml) on.push("XML"); if (b.plano) on.push("plano antes");
+    return [b.formato, b.tipo, b.duracao].filter(Boolean).concat(on).map(c => `<span class="chip">${esc(c)}</span>`).join("");
+  }
+  function renderQueue(){
+    const q = $("queue");
+    $("count").textContent = jobsCache.length ? `${jobsCache.length} job(s)` : "";
+    if (!jobsCache.length){
+      q.innerHTML = `<div class="empty"><b>Nenhum job na fila.</b> Escolha os vídeos acima, preencha a direção de corte e toque em <b>Enviar para a fila</b>. Cada job aparece aqui com o status: enviado, editando, pronto.</div>`;
+      return;
+    }
+    q.innerHTML = jobsCache.map(j => {
+      const b = j.brief || {}, clips = j.clips || [], r = j.resultado;
+      const total = clips.reduce((s, c) => s + (c.size || 0), 0);
+      const when = j.criado ? new Date(j.criado).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "";
+      let res = "";
+      if (r && r.parts && r.parts.length){
+        res = `<div class="result">
+          <h3>Render</h3>
+          ${r.parts.length === 1 ? `<video controls playsinline preload="metadata" src="/_blob/${esc(r.parts[0])}"></video>`
+            : `<div id="pv-${esc(j.id)}"><button class="ghost" data-play="${esc(j.id)}">Montar e assistir (${r.parts.length} partes)</button></div>`}
+          <div class="row"><span class="tc">${esc(r.nome || "final.mp4")} · ${r.size ? fmtMB(r.size) : ""}</span>
+          <button class="ghost" data-save="${esc(j.id)}">Salvar no aparelho</button></div>
+        </div>`;
+      }
+      return `<article class="job">
+        <div class="job-head"><h3>${esc(j.titulo)}</h3><span class="pill s-${esc(j.status)}">${esc(j.status)}</span></div>
+        <span class="tc">${esc(when)} · ${clips.length} vídeo(s) · ${fmtMB(total)}</span>
+        <div class="meta">${chips(b)}</div>
+        ${b.notas ? `<p>${esc(b.notas)}</p>` : ""}
+        ${j.nota_claude ? `<p><b style="color:var(--tungsten);font-weight:500">Claude:</b> ${esc(j.nota_claude)}</p>` : ""}
+        ${j.erro_envio ? `<p style="color:var(--err)">${esc(j.erro_envio)}</p>` : ""}
+        ${res}
+      </article>`;
+    }).join("");
+  }
+
+  async function assemble(parts){
+    const blobs = [];
+    for (const id of parts){
+      const r = await fetch("/_blob/" + id);
+      if (!r.ok) throw new Error("parte " + id + " não carregou");
+      blobs.push(await r.blob());
+    }
+    return new Blob(blobs, { type: "video/mp4" });
+  }
+
+  $("queue").addEventListener("click", async e => {
+    const play = e.target.closest("[data-play]"), save = e.target.closest("[data-save]");
+    if (play){
+      const j = jobsCache.find(x => x.id === play.dataset.play);
+      play.disabled = true; play.textContent = "Montando…";
+      try {
+        const blob = await assemble(j.resultado.parts);
+        const box = $("pv-" + j.id);
+        box.innerHTML = `<video controls playsinline src="${URL.createObjectURL(blob)}"></video>`;
+      } catch (err) { play.disabled = false; play.textContent = "Não carregou. Tentar de novo"; }
+    }
+    if (save){
+      const j = jobsCache.find(x => x.id === save.dataset.save);
+      if (!downloads){ save.textContent = "Salvar indisponível nesta visualização"; save.disabled = true; return; }
+      save.disabled = true; save.textContent = "Preparando…";
+      try {
+        const blob = await assemble(j.resultado.parts);
+        await downloads.save({ filename: j.resultado.nome || "final.mp4", data: blob });
+        save.textContent = "Salvo";
+      } catch (err) {
+        save.disabled = false; save.textContent = err && err.code === "declined" ? "Salvar no aparelho" : "Falhou. Tentar de novo";
+      }
+    }
+  });
+
+  async function refreshQuota(){
+    if (!assets) return;
+    try {
+      const { usage } = await assets.list();
+      $("quota").textContent = `armazenamento ${fmtMB(usage.bytes)} de ${fmtMB(usage.maxBytes)} · ${usage.files}/${usage.maxFiles} partes`;
+    } catch(_){}
+  }
+
+  // ---------- capacidades ----------
+  (async () => {
+    if (!window.claude || !window.claude.use){
+      setCap($("cap-db"), false, "banco offline"); setCap($("cap-assets"), false, "upload offline");
+      return;
+    }
+    const [d, a, dl] = await Promise.all([claude.use("db"), claude.use("assets"), claude.use("downloads")]);
+    db = d; assets = a; downloads = dl;
+    setCap($("cap-db"), !!db, db ? "fila conectada" : "fila indisponível");
+    setCap($("cap-assets"), !!assets, assets ? "upload liberado" : "upload só para a dona");
+    renderPicked();
+    refreshQuota();
+    if (db){
+      db.collection("jobs").orderBy("criado", "desc").onSnapshot(snap => {
+        jobsCache = snap.docs.map(s => Object.assign({ id: s.id }, s.data()));
+        renderQueue();
+      }, () => setCap($("cap-db"), false, "fila caiu; recarregue"));
+    }
+  })();
+})();
+</script>
