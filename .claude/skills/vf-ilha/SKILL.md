@@ -12,7 +12,7 @@ Banco: coleção `jobs`. Campos: `titulo`, `status` (rascunho|enviado|editando|p
 
 ## Passos
 1. `ArtifactData list jobs` → pegar os de `status: enviado`. Marcar `editando` (update com `if_version`).
-2. Para cada clip: `Artifact read` com `path` = cada assetId, `out_dir` = `<trabalho>/<job>/parts/`.
+2. Para cada clip: `Artifact read` com `path` = cada assetId, UMA chamada por parte (`paths` em lote NAO le asset), `out_dir` = `<trabalho>/<job>/parts/`.
    Juntar as partes NA ORDEM com `cat` → arquivo original. Conferir tamanho == `size`.
 3. Editar seguindo o brief (ver `.claude/skills/video-use/SKILL.md` para as regras de produção):
    - silêncio: `auto-editor in.mp4 --margin 0.2s --no-open -o cut.mp4` (XML: `--export premiere`)
