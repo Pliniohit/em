@@ -29,7 +29,7 @@ Skill financeira da Visões Filmes (VF). Cuida da nota fiscal de serviço do com
 - **No portal, informar 6,00%.** O 9% que aparece na NFS-e 417 não é a taxa do DAS.
 - A VF está perto de R$ 180 mil de RBT12. A taxa muda com o faturamento: revisar todo mês com `--rbt12`.
 - O portal não calcula ISSQN no Simples. O imposto tem que estar no preço antes de emitir.
-- Alíquota de orçamento sem regra única: apareceram 6%, 9% e 18,5% (Via Parque). Não usar 9% nem 18,5% sem perguntar ao contador de onde vêm.
+- Alíquota de orçamento sem regra única: apareceram 6%, 8% (orçamento Estrela Guia, out/2026), 9% e 18,5% (Via Parque). Não usar 8%, 9% nem 18,5% sem perguntar ao contador de onde vêm.
 
 ## MEI da Crisia
 - DAS fixo de **R$ 86,05 por mês** em 2026 (serviços). Sem alíquota percentual.
