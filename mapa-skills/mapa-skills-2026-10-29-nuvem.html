@@ -75,9 +75,6 @@ h2 { font-family: var(--display); font-weight: 700; font-size: 1.55rem; line-hei
 .famcard p { margin: 0; color: var(--muted); font-size: .86rem; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips span { font-family: var(--mono); font-size: 11.5px; border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; color: var(--muted); }
-.conn { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-.conn .famcard h3 { display: flex; align-items: center; gap: 8px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: var(--c); flex: none; }
 footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: .9rem; display: flex; flex-direction: column; gap: 6px; max-width: 76ch; }
 footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--paper); }
 </style>
@@ -118,8 +115,10 @@ footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--pap
 
   <section aria-label="Conectores">
     <h2>Conectores desta sessão</h2>
-    <p class="sub">Ferramentas que as skills usam. Skill é o passo a passo; conector é o acesso. Estado em 29/10/2026, nesta sessão na nuvem.</p>
-    <div class="conn" id="conn"></div>
+    <p class="sub">Ferramentas que as skills usam. Skill é o passo a passo; conector é o acesso. Lista dos conectores da conta em 29/10/2026, mais o que só existe nesta sessão na nuvem.</p>
+    <p class="count" id="conn-sum"></p>
+    <div class="grid" id="conn"></div>
+    <p class="sub" id="plugfail" style="margin-top:16px"></p>
   </section>
 
   <footer>
@@ -133,7 +132,7 @@ footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--pap
   var EIXOS = ["Criatividade", "Criação", "Organização", "Planejamento", "Conhecimento"];
   var STATUS = {
     ativa: { nome: "Ativa na conta", cor: "#30d5c8", desc: "instalada e habilitada" },
-    plugin: { nome: "Plugin", cor: "#b9a2ff", desc: "vem de plugin; conector com falha nesta sessão" },
+    plugin: { nome: "Plugin", cor: "#b9a2ff", desc: "vem de plugin; o servidor do plugin falhou nesta sessão" },
     repo: { nome: "No repositório", cor: "#ff9ccf", desc: "escrita, mas ainda não instalada na conta" },
     proposta: { nome: "Proposta", cor: "#9b94aa", desc: "ainda não criada" }
   };
@@ -212,12 +211,34 @@ footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--pap
     ["Ferramentas do Claude Code", 19, "Revisão de código, atalhos, hooks, plugins, loop, dataviz, artifact-design. Servem ao trabalho, não ao conteúdo.", ["artifact-design", "dataviz", "loop", "update-config", "code-review", "workflow-authoring"]]
   ];
 
+  var CSTATE = {
+    ok: { nome: "Conectado", cor: "#30d5c8" },
+    inc: { nome: "Falta autorizar", cor: "#ffb08f" },
+    nao: { nome: "Não conectado", cor: "#9b94aa" },
+    sessao: { nome: "Só desta sessão", cor: "#8fa4ff" }
+  };
+  /* fonte: ListConnectors em 29/10/2026 (conectores da conta) mais as ferramentas da própria sessão */
   var CONNS = [
-    ["#30d5c8", "Funcionando nesta sessão", "Google Drive, Gmail, Calendar, Sheets, GitHub, Figma, Higgsfield, Magnific, Tactiq. No Tactiq a busca e a lista funcionam; resumo e transcrição exigem plano Team."],
-    ["#ffb08f", "Falha de conexão (proxy 403)", "Plugin Adobe, plugins de marketing (Ahrefs, Amplitude, HubSpot, Klaviyo, Notion, Similarweb, Slack, Supermetrics, Canva, Figma), Windsor.ai e plugins de dados (Atlassian, BigQuery, Definite, Hex). Falha de conexão, não ausência."],
-    ["#b9a2ff", "Precisa autorizar", "Canva e Adobe Marketing Agent. A autorização é nas configurações de conectores do claude.ai."],
-    ["#9b94aa", "Nenhum computador conectado", "Não há pasta de máquina anexada a esta sessão, então nada daqui chega ao disco do DESKTOP ou do NOTEBOOK."]
+    ["Adobe for creativity", "ok", [C, CR], "Express, Acrobat, imagem, vídeo e fontes. Ferramentas carregadas; não testei nenhuma chamada nesta sessão."],
+    ["Figma", "ok", [CR], "Diagramas e contexto de design para código."],
+    ["Gmail", "ok", [O, P], "Buscar caixa, resumir conversas e rascunhar respostas."],
+    ["Google Calendar", "ok", [P], "Agenda, eventos e horários livres."],
+    ["Google Drive", "ok", [O, K], "Buscar, ler e subir arquivos. Usado nesta sessão: achou o handoff de notas fiscais."],
+    ["Google Sheets", "ok", [P, O], "Ler e atualizar planilhas."],
+    ["higgs (Higgsfield)", "ok", [C], "Gera imagem, vídeo e áudio. Gasta créditos da sua conta, só com autorização."],
+    ["magnific", "ok", [C], "Imagem, vídeo, áudio, 3D e kit de marca. Gasta créditos da sua conta, só com autorização."],
+    ["Tactiq", "ok", [K], "Buscar e listar reuniões. Resumo e transcrição exigem o plano Team."],
+    ["Adobe Marketing Agent", "inc", [P], "Conexão incompleta. Autorizar nas configurações de conectores do claude.ai."],
+    ["Canva", "inc", [C, CR], "Conexão incompleta. Criar, preencher e exportar designs."],
+    ["HyperFrames by HeyGen", "inc", [C], "Conexão incompleta. Slides animados e motion graphics em HTML."],
+    ["Metricool", "inc", [P, O], "Conexão incompleta. Agendar e analisar posts de redes sociais."],
+    ["Miro", "inc", [P, O], "Conexão incompleta. Quadros e mapas colaborativos."],
+    ["Slack", "inc", [O], "Conexão incompleta. Mensagens e canvases."],
+    ["Adobe Workfront", "nao", [P], "Instalado, mas não conectado. Planejamento, tarefas e aprovações."],
+    ["GitHub", "sessao", [O], "Repositório pliniohit/em. Usado nesta sessão para guardar skills, mascote e este mapa."],
+    ["Sessões e rotinas (claude-code-remote)", "sessao", [O, P], "Cria sessões, lembretes e rotinas agendadas. Nenhuma pasta de computador anexada."]
   ];
+  var PLUGFAIL = "Servidores de plugin que falharam nesta sessão (proxy 403, não ausência): Adobe (plugin), marketing (Ahrefs, Amplitude, HubSpot, Klaviyo, Notion, Similarweb, Slack, Supermetrics, Canva, Figma), dados (Amplitude, Atlassian, BigQuery, Definite, Hex), Windsor.ai e Meta VR. Isso é separado dos conectores da conta acima e pode não se repetir no DESKTOP ou no NOTEBOOK.";
 
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 
@@ -317,14 +338,22 @@ footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--pap
   }
 
   function conns() {
-    var box = document.getElementById("conn");
+    var box = document.getElementById("conn"), sum = document.getElementById("conn-sum"), cnt = {};
     CONNS.forEach(function (c) {
-      var d = el("div", "famcard");
-      var h = el("h3"); var dot = el("span", "dot"); dot.style.setProperty("--c", c[0]);
-      h.appendChild(dot); h.appendChild(document.createTextNode(c[1]));
-      d.appendChild(h); d.appendChild(el("p", null, c[2]));
+      cnt[c[1]] = (cnt[c[1]] || 0) + 1;
+      var cor = CSTATE[c[1]].cor;
+      var d = el("div", "card");
+      d.style.setProperty("--c", cor);
+      d.appendChild(el("h3", null, c[0]));
+      d.appendChild(el("p", null, c[3]));
+      var m = el("div", "meta");
+      var p1 = el("span", "pill st", CSTATE[c[1]].nome); p1.style.setProperty("--c", cor); m.appendChild(p1);
+      c[2].forEach(function (e2) { m.appendChild(el("span", "pill", e2)); });
+      d.appendChild(m);
       box.appendChild(d);
     });
+    sum.textContent = (cnt.ok || 0) + " conectados · " + (cnt.inc || 0) + " com conexão incompleta · " + (cnt.nao || 0) + " não conectado · " + (cnt.sessao || 0) + " só desta sessão.";
+    document.getElementById("plugfail").textContent = PLUGFAIL;
   }
 
   tiles(); gaps(); filters(); render(); fams(); conns();
