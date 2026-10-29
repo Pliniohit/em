@@ -2,11 +2,10 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: retrato de estado em coluna única: resumo, lacunas, filtros e cartões, famílias fora do foco e conectores */
+/* Layout: resumo, lacunas e o mapa por campo de trabalho; cada cartão abre com a função e deixa o nome técnico em segundo plano */
 :root {
   --ink: #0e0c14;
   --panel: #171420;
-  --panel2: #1d1a28;
   --line: #2b2638;
   --paper: #ece7de;
   --muted: #9b94aa;
@@ -20,7 +19,7 @@
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
   color-scheme: dark;
 }
-html { background: var(--ink); }
+html { background: var(--ink); scroll-behavior: smooth; }
 body {
   background: var(--ink);
   color: var(--paper);
@@ -38,7 +37,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 7vw
 h1 em { font-style: italic; font-weight: 500; color: var(--turq); }
 header p { margin: 0; color: var(--muted); }
 h2 { font-family: var(--display); font-weight: 700; font-size: 1.55rem; line-height: 1.15; margin: 0 0 6px; text-wrap: balance; }
-.sub { color: var(--muted); font-size: .92rem; margin: 0 0 16px; max-width: 70ch; }
+.sub { color: var(--muted); font-size: .92rem; margin: 0 0 16px; max-width: 72ch; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .tile b { font-family: var(--display); font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -48,23 +47,34 @@ h2 { font-family: var(--display); font-weight: 700; font-size: 1.55rem; line-hei
 .gap { background: var(--panel); border: 1px dashed #4a4260; border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .gap h3 { margin: 0; font-family: var(--display); font-size: 1.1rem; line-height: 1.2; }
 .gap p { margin: 0; color: var(--muted); font-size: .88rem; }
-.prio { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
-.prio.alta { color: var(--warn); }
-.prio.media { color: var(--lilac); }
-.prio.baixa { color: var(--muted); }
-.filters { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+.prio { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; display: flex; gap: 10px; flex-wrap: wrap; }
+.prio.alta b { color: var(--warn); }
+.prio.media b { color: var(--lilac); }
+.prio.baixa b { color: var(--muted); }
+.prio b { font-weight: 500; }
+.prio span { color: var(--muted); }
+.toolbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; position: sticky; top: env(safe-area-inset-top, 0px); background: var(--ink); padding-block: 10px; z-index: 5; border-bottom: 1px solid var(--line); }
 .fgroup { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .flabel { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); width: 74px; flex: none; }
-.chip { font: 500 .85rem var(--body); color: var(--paper); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 13px; cursor: pointer; }
+.chip { font: 500 .85rem var(--body); color: var(--paper); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 13px; cursor: pointer; text-decoration: none; display: inline-block; }
 .chip[aria-pressed="true"] { border-color: var(--turq); background: rgba(48, 213, 200, .1); }
+.chip:hover { border-color: var(--muted); }
 .chip:focus-visible, .search:focus-visible { outline: 2px solid var(--turq); outline-offset: 2px; }
-.search { font: .95rem var(--body); color: var(--paper); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; width: min(100%, 360px); }
+.search { font: .95rem var(--body); color: var(--paper); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; width: min(100%, 320px); }
 .count { font-size: .85rem; color: var(--muted); }
+@media (max-width: 700px) { .toolbar { position: static; } .flabel { width: 100%; } }
+.field { display: flex; flex-direction: column; gap: 14px; padding-top: 28px; scroll-margin-top: 150px; }
+.field-head { display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.field-head h2 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.2rem); }
+.field-head p { margin: 0; color: var(--muted); font-size: .92rem; }
+.field-head .nums { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; color: var(--muted); margin-top: 4px; }
+.grp { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 6px 0 -4px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
-.card { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--c, var(--line)); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--c, var(--line)); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .card.prop { border-style: dashed; border-left-style: solid; background: transparent; }
-.card h3 { margin: 0; font-family: var(--mono); font-size: .95rem; font-weight: 500; overflow-wrap: anywhere; }
-.card p { margin: 0; color: var(--muted); font-size: .86rem; }
+.card h3 { margin: 0; font-family: var(--body); font-size: 1.02rem; font-weight: 600; line-height: 1.3; text-wrap: balance; }
+.card .nm { font-family: var(--mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.card p { margin: 0; color: var(--muted); font-size: .85rem; }
 .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 4px; }
 .pill { font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; color: var(--muted); }
 .pill.st { color: var(--c); border-color: var(--c); }
@@ -75,6 +85,7 @@ h2 { font-family: var(--display); font-weight: 700; font-size: 1.55rem; line-hei
 .famcard p { margin: 0; color: var(--muted); font-size: .86rem; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips span { font-family: var(--mono); font-size: 11.5px; border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; color: var(--muted); }
+.note { color: var(--muted); font-size: .88rem; max-width: 80ch; margin: 0; }
 footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: .9rem; display: flex; flex-direction: column; gap: 6px; max-width: 76ch; }
 footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--paper); }
 </style>
@@ -83,7 +94,7 @@ footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--pap
   <header>
     <div class="eyebrow">Visões Filmes · retrato publicado · 29/10/2026 · máquina: nuvem</div>
     <h1>Mapa das nossas <em>skills</em></h1>
-    <p>O que existe, o que está ativo, o que só está no repositório e o que ainda não foi criado, cruzado com os cinco eixos de trabalho da VF. Este é um retrato: não se atualiza sozinho. Para atualizar, a gente republica.</p>
+    <p>Cada cartão abre com o que a skill faz e fica no campo de trabalho a que serve. O nome técnico aparece pequeno, só para achar. Conectores entram no mesmo campo, porque skill é o passo a passo e conector é o acesso. É um retrato: não se atualiza sozinho, a gente republica.</p>
   </header>
 
   <section aria-label="Resumo">
@@ -96,266 +107,263 @@ footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--pap
     <div class="gaps" id="gaps"></div>
   </section>
 
-  <section aria-label="Skills">
-    <h2>Skills que importam para a VF</h2>
-    <p class="sub">Cartões individuais das skills da sua conta, dos plugins de Adobe e marketing, do repositório e das propostas. Filtre por eixo e por situação.</p>
-    <div class="filters">
-      <div class="fgroup" id="f-eixo"><span class="flabel">Eixo</span></div>
+  <section aria-label="Mapa por campo">
+    <h2>Mapa por campo de trabalho</h2>
+    <div class="toolbar">
+      <div class="fgroup" id="f-campo"><span class="flabel">Ir para</span></div>
       <div class="fgroup" id="f-status"><span class="flabel">Situação</span></div>
-      <div class="fgroup"><span class="flabel">Busca</span><input class="search" id="q" type="search" placeholder="nome ou palavra" aria-label="Buscar skill"><span class="count" id="count"></span></div>
+      <div class="fgroup"><span class="flabel">Busca</span><input class="search" id="q" type="search" placeholder="função ou nome" aria-label="Buscar skill ou conector"><span class="count" id="count"></span></div>
     </div>
-    <div class="grid" id="grid"></div>
+    <div id="fields"></div>
   </section>
 
   <section aria-label="Famílias fora do foco">
-    <h2>Famílias fora do foco</h2>
-    <p class="sub">Aparecem na sessão, mas não tocam o trabalho de edição, projeção, IA criativa ou financeiro da VF. Contagem pela lista desta sessão.</p>
+    <h2>Fora do foco da VF</h2>
+    <p class="sub">Aparecem na sessão, mas não tocam edição, projeção, IA criativa ou financeiro. Só contagem, pela lista desta sessão.</p>
     <div class="fam" id="fam"></div>
   </section>
 
-  <section aria-label="Conectores">
-    <h2>Conectores desta sessão</h2>
-    <p class="sub">Ferramentas que as skills usam. Skill é o passo a passo; conector é o acesso. Lista dos conectores da conta em 29/10/2026, mais o que só existe nesta sessão na nuvem.</p>
-    <p class="count" id="conn-sum"></p>
-    <div class="grid" id="conn"></div>
-    <p class="sub" id="plugfail" style="margin-top:16px"></p>
+  <section aria-label="Falhas de plugin">
+    <p class="note" id="plugfail"></p>
   </section>
 
   <footer>
     <strong>Como ler e atualizar</strong>
-    <span>As skills da sua conta aparecem duas vezes na lista da sessão, uma como skill da conta e outra com o prefixo do pacote da Anthropic. Contei uma vez só. Falha de conector é desta sessão e pode não se repetir no DESKTOP ou no NOTEBOOK. Fonte do arquivo: <code>mapa-skills/mapa-skills-2026-10-29-nuvem.html</code>, branch <code>claude/vf-buscador-skill</code>.</span>
+    <span>A situação filtra só as skills. Skill em mais de um campo aparece uma vez, no campo principal, com o secundário numa etiqueta. As skills da sua conta aparecem duas vezes na lista da sessão, uma como skill da conta e outra com o prefixo do pacote da Anthropic. Contei uma vez só. Fonte: <code>mapa-skills/mapa-skills-2026-10-29-nuvem.html</code>, branch <code>claude/vf-buscador-skill</code>.</span>
   </footer>
 </div>
 
 <script>
 (function () {
-  var EIXOS = ["Criatividade", "Criação", "Organização", "Planejamento", "Conhecimento"];
+  var CAMPOS = [
+    ["Criatividade", "IA generativa, motion, projeção mapeada, VJ, arte."],
+    ["Criação", "Peças finais: Adobe, vídeo, documentos, apresentações, PDF."],
+    ["Organização", "Arquivos, memória, colmeia, comunicação, ferramentas."],
+    ["Planejamento", "Orçamento, notas fiscais, cronograma, agenda, campanhas."],
+    ["Conhecimento", "Pesquisa, referências, mercado, aprender e descobrir skills."]
+  ];
   var STATUS = {
     ativa: { nome: "Ativa na conta", cor: "#30d5c8", desc: "instalada e habilitada" },
     plugin: { nome: "Plugin", cor: "#b9a2ff", desc: "vem de plugin; o servidor do plugin falhou nesta sessão" },
     repo: { nome: "No repositório", cor: "#ff9ccf", desc: "escrita, mas ainda não instalada na conta" },
     proposta: { nome: "Proposta", cor: "#9b94aa", desc: "ainda não criada" }
   };
-  var C = "Criatividade", CR = "Criação", O = "Organização", P = "Planejamento", K = "Conhecimento";
-
-  var SKILLS = [
-    ["slash-commands", "ativa", [O], "Executa qualquer comando que começa com barra."],
-    ["documentacao", "ativa", [O, P], "Sua skill: tabelas e documentos."],
-    ["docs", "ativa", [CR, O], "Documentos editáveis para compartilhar e comentar."],
-    ["google-workspace", "ativa", [O], "Cria e edita Docs, Sheets e Slides no Drive."],
-    ["doc-coauthoring", "ativa", [CR, P], "Escrita de documentação em etapas, com revisão."],
-    ["internal-comms", "ativa", [O, P], "Comunicados, relatórios de status e FAQs."],
-    ["morning", "ativa", [P, O], "Resumo da manhã em HTML, só quando pedido."],
-    ["import-memory", "ativa", [O, K], "Importa memória de outro assistente, tratada como dado."],
-    ["learn", "ativa", [K], "Explica como e por que algo funciona."],
-    ["skill-creator", "ativa", [O, K], "Cria, melhora e testa skills."],
-    ["mcp-builder", "ativa", [O], "Constrói servidores MCP para ligar serviços externos."],
-    ["xlsx", "ativa", [P], "Planilhas: ler, editar e criar."],
-    ["docx", "ativa", [CR], "Documentos Word."],
-    ["pptx", "ativa", [CR], "Apresentações em PowerPoint."],
-    ["pdf", "ativa", [CR, O], "Ler, juntar, dividir e criar PDF."],
-    ["canvas-design", "ativa", [C, CR], "Pôsteres e peças estáticas em PNG ou PDF."],
-    ["theme-factory", "ativa", [CR], "Dez temas prontos para slides, docs e páginas."],
-    ["web-artifacts-builder", "ativa", [CR], "Artifacts complexos em React e Tailwind."],
-    ["algorithmic-art", "ativa", [C], "Arte generativa em p5.js com sementes e parâmetros."],
-    ["slack-gif-creator", "ativa", [C], "GIFs animados otimizados para Slack."],
-    ["brand-guidelines", "ativa", [CR], "Atenção: aplica a marca da Anthropic, não a da Visões."],
-
-    ["adobe", "plugin", [CR], "Tour do que o conector Adobe faz."],
-    ["adobe-anypdf", "plugin", [CR, O], "Qualquer tarefa de PDF com Acrobat: comprimir, OCR, redigir, juntar."],
-    ["adobe-anydocx", "plugin", [CR], "PDF para Word com fidelidade."],
-    ["adobe-anypptx", "plugin", [CR], "PDF para PowerPoint."],
-    ["adobe-anyexcel", "plugin", [CR, P], "Tabelas de PDF para Excel."],
-    ["adobe-create-pdfs-from-data", "plugin", [CR], "Mala direta em InDesign: CSV mais modelo viram PDFs."],
-    ["adobe-design-from-template", "plugin", [C, CR], "Peças a partir de modelos do Adobe Express."],
-    ["adobe-design-to-pdf", "plugin", [CR], "Modelo do Express vira PDF para gráfica."],
-    ["adobe-batch-edit-photos", "plugin", [C, CR], "Mesmo tratamento em um lote de fotos."],
-    ["adobe-retouch-portraits", "plugin", [CR], "Retoque em lote de retratos."],
-    ["adobe-create-social-variations", "plugin", [C, CR], "Foto ou vídeo nos formatos de cada rede."],
-    ["adobe-resize-photos-and-videos", "plugin", [CR], "Redimensiona para medidas exatas."],
-    ["adobe-edit-quick-cut", "plugin", [C, CR], "Corte-resumo de vídeo por relevância."],
-    ["adobe-fonts", "plugin", [C, CR], "Busca e pré-visualiza fontes do Adobe Fonts."],
-    ["adobe-document-review", "plugin", [K, O], "Marca o que importa em contratos e PDFs."],
-
-    ["campaign-plan", "plugin", [P], "Briefing de campanha com calendário e métricas."],
-    ["content-creation", "plugin", [CR, C], "Textos para canais: blog, rede, e-mail, release."],
-    ["draft-content", "plugin", [CR], "Rascunho com formato por canal e SEO."],
-    ["brand-review", "plugin", [CR, K], "Revisa texto contra voz e guia de marca."],
-    ["competitive-brief", "plugin", [K, P], "Pesquisa de concorrentes e posicionamento."],
-    ["email-sequence", "plugin", [P, CR], "Sequências de e-mail com ramificação."],
-    ["performance-report", "plugin", [P, K], "Relatório de desempenho com recomendações."],
-    ["seo-audit", "plugin", [K], "Auditoria de SEO com plano de ação."],
-
-    ["vf-buscador", "repo", [K, O], "Busca e avalia skills, plugins e MCPs com filtro de segurança. Nunca instala sozinha. Rotina semanal desligada."],
-
-    ["vf-nfse", "proposta", [P], "Fórmula custo ÷ (1 − alíquota), regras do Emissor Nacional, erros de emissão, alerta do teto do MEI. Base achada no Drive (handoff de 16/10). Prioridade alta."],
-    ["vf-orcamento", "proposta", [P], "Diárias, logística, piso, projeto fechado, parcelamento 50/50 e corte de escopo antes de taxa. Prioridade alta."],
-    ["colmeia", "proposta", [O], "Palavra-chave \"verifique colmeia\", um MD por máquina, diário só com acréscimo. Prioridade média."],
-    ["vf-visual", "proposta", [C, CR], "Infográfico, mapa e painel em HTML escuro com serifa, artifact mais fonte salvo fora do temporário. Prioridade média."],
-    ["vf-mascote", "proposta", [C], "Guarda o MD do mascote v5 para gerar assinatura, avatar e versão de terminal sem refazer. Prioridade baixa."]
-  ];
-
-  var GAPS = [
-    ["alta", "Financeiro e NFS-e sem skill", "Regras de nota, alíquota e teto do MEI vivem só nas preferências e num handoff do Drive. Skill proposta: vf-nfse e vf-orcamento."],
-    ["alta", "vf-buscador não está instalada", "Existe no branch, mas só vale para sessões neste repositório. Falta instalar na conta e rodar a primeira busca manual antes de ligar a rotina."],
-    ["alta", "Núcleo criativo sem ID", "A busca de conhecimento da VF depende do ID da pasta no Drive. Ninguém passou ainda, e não vou chutar caminho."],
-    ["media", "Nada para Resolume, TouchDesigner e MadMapper", "Projeção mapeada e VJ não têm skill. Também não há playbook de prompts para Higgsfield e Magnific: só os conectores, sem passo a passo da casa."],
-    ["media", "Marca da Visões não está em nenhuma skill", "A brand-guidelines da conta é da Anthropic. Cores, tipografia e o mascote da VF ainda não estão em lugar nenhum que a skill carregue."],
-    ["baixa", "Nenhuma máquina conectada", "Não dá para copiar skills para Downloads\\claude nem para a pasta de memória daqui. Precisa de uma sessão no DESKTOP ou no NOTEBOOK."]
-  ];
-
-  var FAMS = [
-    ["Windsor.ai", 43, "Relatórios de anúncios, CRM, e-commerce e redes via conector. Conector falhou nesta sessão.", ["google-ads", "facebook-ads", "hubspot", "instagram", "youtube", "windsor-insights"]],
-    ["Meta VR e Horizon OS", 36, "Desenvolvimento para Quest: Unity, Spatial SDK, WebXR, loja. Sem uso previsto na VF.", ["hz-spatial-sdk", "hz-iwsdk-webxr", "hz-store-submit", "hz-unity-*"]],
-    ["Dados e SQL", 10, "Análise, SQL, estatística e gráficos em Python. Úteis só se a VF montar painel de dados.", ["analyze", "build-dashboard", "create-viz", "sql-queries", "validate-data"]],
-    ["Ferramentas do Claude Code", 19, "Revisão de código, atalhos, hooks, plugins, loop, dataviz, artifact-design. Servem ao trabalho, não ao conteúdo.", ["artifact-design", "dataviz", "loop", "update-config", "code-review", "workflow-authoring"]]
-  ];
-
   var CSTATE = {
     ok: { nome: "Conectado", cor: "#30d5c8" },
     inc: { nome: "Falta autorizar", cor: "#ffb08f" },
     nao: { nome: "Não conectado", cor: "#9b94aa" },
     sessao: { nome: "Só desta sessão", cor: "#8fa4ff" }
   };
-  /* fonte: ListConnectors em 29/10/2026 (conectores da conta) mais as ferramentas da própria sessão */
-  var CONNS = [
-    ["Adobe for creativity", "ok", [C, CR], "Express, Acrobat, imagem, vídeo e fontes. Ferramentas carregadas; não testei nenhuma chamada nesta sessão."],
-    ["Figma", "ok", [CR], "Diagramas e contexto de design para código."],
-    ["Gmail", "ok", [O, P], "Buscar caixa, resumir conversas e rascunhar respostas."],
-    ["Google Calendar", "ok", [P], "Agenda, eventos e horários livres."],
-    ["Google Drive", "ok", [O, K], "Buscar, ler e subir arquivos. Usado nesta sessão: achou o handoff de notas fiscais."],
-    ["Google Sheets", "ok", [P, O], "Ler e atualizar planilhas."],
-    ["higgs (Higgsfield)", "ok", [C], "Gera imagem, vídeo e áudio. Gasta créditos da sua conta, só com autorização."],
-    ["magnific", "ok", [C], "Imagem, vídeo, áudio, 3D e kit de marca. Gasta créditos da sua conta, só com autorização."],
-    ["Tactiq", "ok", [K], "Buscar e listar reuniões. Resumo e transcrição exigem o plano Team."],
-    ["Adobe Marketing Agent", "inc", [P], "Conexão incompleta. Autorizar nas configurações de conectores do claude.ai."],
-    ["Canva", "inc", [C, CR], "Conexão incompleta. Criar, preencher e exportar designs."],
-    ["HyperFrames by HeyGen", "inc", [C], "Conexão incompleta. Slides animados e motion graphics em HTML."],
-    ["Metricool", "inc", [P, O], "Conexão incompleta. Agendar e analisar posts de redes sociais."],
-    ["Miro", "inc", [P, O], "Conexão incompleta. Quadros e mapas colaborativos."],
-    ["Slack", "inc", [O], "Conexão incompleta. Mensagens e canvases."],
-    ["Adobe Workfront", "nao", [P], "Instalado, mas não conectado. Planejamento, tarefas e aprovações."],
-    ["GitHub", "sessao", [O], "Repositório pliniohit/em. Usado nesta sessão para guardar skills, mascote e este mapa."],
-    ["Sessões e rotinas (claude-code-remote)", "sessao", [O, P], "Cria sessões, lembretes e rotinas agendadas. Nenhuma pasta de computador anexada."]
+  var C = "Criatividade", CR = "Criação", O = "Organização", P = "Planejamento", K = "Conhecimento";
+
+  /* [nome técnico, situação, campos (o primeiro é o principal), função, detalhe] */
+  var SKILLS = [
+    ["slash-commands", "ativa", [O], "Roda comandos com barra", "Qualquer mensagem que começa com /, como /compact ou /resumo."],
+    ["documentacao", "ativa", [O, P], "Monta tabelas e documentos", "Sua skill, acionada quando você pede tabela ou documento."],
+    ["docs", "ativa", [CR, O], "Escreve documentos para compartilhar", "Docs editáveis que dá para comentar e exportar."],
+    ["google-workspace", "ativa", [O], "Edita Docs, Sheets e Slides no Drive", "Cria, copia e muda arquivos do Google."],
+    ["doc-coauthoring", "ativa", [CR, P], "Escreve documentação em etapas", "Coleta contexto, refina e testa se o texto funciona para quem lê."],
+    ["internal-comms", "ativa", [O, P], "Redige comunicados e relatórios internos", "Status, atualizações, FAQs e relatos de incidente."],
+    ["morning", "ativa", [P, O], "Resume o dia em um painel", "Só roda quando você pede o resumo da manhã."],
+    ["import-memory", "ativa", [O, K], "Importa memória de outro assistente", "Trata o conteúdo importado como dado, não como ordem."],
+    ["learn", "ativa", [K], "Explica como as coisas funcionam", "Para entender um conceito, não para executar tarefa."],
+    ["skill-creator", "ativa", [O, K], "Cria e testa novas skills", "Também melhora e mede skills que já existem."],
+    ["mcp-builder", "ativa", [O], "Constrói conexões com serviços externos", "Servidores MCP em Python ou Node."],
+    ["xlsx", "ativa", [P], "Cria e edita planilhas", "Excel e CSV: ler, corrigir, calcular, formatar."],
+    ["docx", "ativa", [CR], "Cria e edita documentos Word", "Inclui alterações rastreadas e comentários."],
+    ["pptx", "ativa", [CR], "Cria e edita apresentações", "Arquivos .pptx e modelos."],
+    ["pdf", "ativa", [CR, O], "Lê, junta, divide e cria PDF", "Também preenche formulários e faz OCR."],
+    ["canvas-design", "ativa", [C, CR], "Faz pôsteres e peças estáticas", "Saída em PNG ou PDF."],
+    ["theme-factory", "ativa", [CR], "Aplica temas visuais prontos", "Dez temas de cor e fonte para slides, docs e páginas."],
+    ["web-artifacts-builder", "ativa", [CR], "Monta páginas interativas complexas", "React, Tailwind e shadcn."],
+    ["algorithmic-art", "ativa", [C], "Gera arte por código", "p5.js com sementes e parâmetros ajustáveis."],
+    ["slack-gif-creator", "ativa", [C], "Cria GIFs animados", "Otimizados para o Slack."],
+    ["brand-guidelines", "ativa", [CR], "Aplica a marca da Anthropic", "Atenção: não é a identidade da Visões."],
+
+    ["adobe", "plugin", [CR], "Mostra o que o conector Adobe faz", "Tour com um exemplo por capacidade."],
+    ["adobe-anypdf", "plugin", [CR, O], "Trabalha PDFs com o Acrobat", "Comprimir, OCR, redigir, juntar, dividir, assinar."],
+    ["adobe-anydocx", "plugin", [CR], "Converte PDF em Word", "Preserva o layout melhor que leitura de texto."],
+    ["adobe-anypptx", "plugin", [CR], "Converte PDF em PowerPoint", "Para transformar material pronto em slides."],
+    ["adobe-anyexcel", "plugin", [CR, P], "Converte tabelas de PDF em Excel", "Puxa as tabelas do PDF para planilha."],
+    ["adobe-create-pdfs-from-data", "plugin", [CR], "Gera PDFs em lote a partir de planilha", "Mala direta em InDesign, linha por linha."],
+    ["adobe-design-from-template", "plugin", [C, CR], "Cria peças com modelos do Express", "Flyer, convite, post, cartão."],
+    ["adobe-design-to-pdf", "plugin", [CR], "Prepara a peça para gráfica ou compartilhar", "Do modelo do Express ao PDF pronto."],
+    ["adobe-batch-edit-photos", "plugin", [C, CR], "Padroniza o tratamento de um lote de fotos", "Deixa as imagens com cara de editadas juntas."],
+    ["adobe-retouch-portraits", "plugin", [CR], "Retoca retratos em lote", "Endireita, ajusta tom e luz."],
+    ["adobe-create-social-variations", "plugin", [C, CR], "Adapta imagem e vídeo para cada rede", "Formatos de Instagram, TikTok, LinkedIn, YouTube."],
+    ["adobe-resize-photos-and-videos", "plugin", [CR], "Redimensiona para medidas exatas", "Pixels, proporção ou nome como 4K."],
+    ["adobe-edit-quick-cut", "plugin", [C, CR], "Corta um resumo do vídeo", "Escolhe os melhores momentos, não faz corte exato."],
+    ["adobe-fonts", "plugin", [C, CR], "Busca e testa fontes", "Recomenda, compara e mostra amostra."],
+    ["adobe-document-review", "plugin", [K, O], "Destaca o que importa num PDF", "Contratos, notas, relatórios: riscos, datas e valores."],
+
+    ["campaign-plan", "plugin", [P], "Planeja campanha com calendário", "Objetivo, público, canais e métricas."],
+    ["content-creation", "plugin", [CR, C], "Escreve textos por canal", "Blog, rede social, e-mail, release."],
+    ["draft-content", "plugin", [CR], "Rascunha com formato e SEO por canal", "Opções de título e chamada."],
+    ["brand-review", "plugin", [CR, K], "Revisa texto contra a voz da marca", "Aponta desvios com antes e depois."],
+    ["competitive-brief", "plugin", [K, P], "Compara concorrentes", "Posicionamento, lacunas e ameaças."],
+    ["email-sequence", "plugin", [P, CR], "Desenha sequência de e-mails", "Com tempos, ramificações e testes."],
+    ["performance-report", "plugin", [P, K], "Monta relatório de desempenho", "O que ganhou, o que perdeu e o que fazer."],
+    ["seo-audit", "plugin", [K], "Audita o SEO de um site", "Palavras-chave, lacunas e plano de ação."],
+
+    ["vf-buscador", "repo", [K, O], "Busca e avalia novas skills com filtro de segurança", "Nunca instala sozinha. Rotina semanal desligada."],
+
+    ["vf-nfse", "proposta", [P], "Calcula e confere notas fiscais", "Custo ÷ (1 − alíquota), regras do Emissor Nacional, erros de emissão e teto do MEI. Base achada no Drive. Prioridade alta."],
+    ["vf-orcamento", "proposta", [P], "Monta orçamento e conduz a negociação", "Diárias, logística, piso, projeto fechado, parcelamento 50/50. Prioridade alta."],
+    ["colmeia", "proposta", [O], "Sincroniza a memória entre as máquinas", "Palavra-chave \"verifique colmeia\", um MD por máquina, diário só com acréscimo. Prioridade média."],
+    ["vf-visual", "proposta", [C, CR], "Faz mapas e painéis no padrão da VF", "HTML escuro com serifa, artifact mais fonte fora do temporário. Prioridade média."],
+    ["vf-mascote", "proposta", [C], "Guarda e reaplica o mascote", "Mantém o MD do mascote v5 para assinatura, avatar e terminal. Prioridade baixa."]
   ];
-  var PLUGFAIL = "Servidores de plugin que falharam nesta sessão (proxy 403, não ausência): Adobe (plugin), marketing (Ahrefs, Amplitude, HubSpot, Klaviyo, Notion, Similarweb, Slack, Supermetrics, Canva, Figma), dados (Amplitude, Atlassian, BigQuery, Definite, Hex), Windsor.ai e Meta VR. Isso é separado dos conectores da conta acima e pode não se repetir no DESKTOP ou no NOTEBOOK.";
+
+  /* [nome, estado, campos, função, detalhe] — fonte: ListConnectors em 29/10/2026 mais as ferramentas da sessão */
+  var CONNS = [
+    ["Adobe for creativity", "ok", [C, CR], "Edita imagem, vídeo, PDF e design Adobe", "Ferramentas carregadas; não testei nenhuma chamada nesta sessão."],
+    ["Figma", "ok", [CR], "Lê e gera design e diagramas", "Contexto de design para código."],
+    ["Gmail", "ok", [O, P], "Busca e rascunha e-mails", "Resume conversas e prepara respostas."],
+    ["Google Calendar", "ok", [P], "Consulta e marca a agenda", "Eventos e horários livres."],
+    ["Google Drive", "ok", [O, K], "Busca, lê e guarda arquivos", "Usado nesta sessão: achou o handoff de notas fiscais."],
+    ["Google Sheets", "ok", [P, O], "Lê e atualiza planilhas", "Valores e fórmulas."],
+    ["higgs (Higgsfield)", "ok", [C], "Gera imagem, vídeo e áudio com IA", "Gasta créditos da sua conta, só com autorização."],
+    ["magnific", "ok", [C], "Gera e melhora imagem, vídeo, áudio e 3D", "Gasta créditos da sua conta, só com autorização."],
+    ["Tactiq", "ok", [K], "Busca reuniões gravadas", "Resumo e transcrição exigem o plano Team."],
+    ["Adobe Marketing Agent", "inc", [P], "Conector de marketing da Adobe", "Descrição não informada. Falta autorizar nas configurações de conectores."],
+    ["Canva", "inc", [C, CR], "Cria e exporta designs no Canva", "Falta autorizar."],
+    ["HyperFrames by HeyGen", "inc", [C], "Cria slides animados e motion graphics em HTML", "Falta autorizar."],
+    ["Metricool", "inc", [P, O], "Agenda e analisa posts de redes sociais", "Falta autorizar."],
+    ["Miro", "inc", [P, O], "Lê e cria quadros colaborativos", "Falta autorizar."],
+    ["Slack", "inc", [O], "Envia mensagens e lê conversas", "Falta autorizar."],
+    ["Adobe Workfront", "nao", [P], "Gerencia projetos, tarefas e aprovações", "Instalado, mas não conectado."],
+    ["GitHub", "sessao", [O], "Guarda código e arquivos do repositório", "Repositório pliniohit/em: skills, mascote e este mapa."],
+    ["Sessões e rotinas", "sessao", [O, P], "Cria sessões, lembretes e rotinas agendadas", "Nenhuma pasta de computador anexada a esta sessão."]
+  ];
+
+  var GAPS = [
+    ["alta", P, "Financeiro e NFS-e sem skill", "Regras de nota, alíquota e teto do MEI vivem só nas preferências e num handoff do Drive. Propostas: vf-nfse e vf-orcamento."],
+    ["alta", K, "vf-buscador não está instalada", "Existe no branch, mas só vale para sessões neste repositório. Falta instalar na conta e rodar a primeira busca manual antes de ligar a rotina."],
+    ["alta", K, "Núcleo criativo sem ID", "A busca de conhecimento da VF depende do ID da pasta no Drive. Ninguém passou ainda, e não vou chutar caminho."],
+    ["media", C, "Nada para Resolume, TouchDesigner e MadMapper", "Projeção mapeada e VJ não têm skill. Também não há playbook de prompts para Higgsfield e Magnific: só os conectores."],
+    ["media", CR, "A marca da Visões não está em nenhuma skill", "A brand-guidelines da conta é da Anthropic. Cores, tipografia e o mascote da VF não estão em lugar nenhum que a skill carregue."],
+    ["baixa", O, "Nenhuma máquina conectada", "Não dá para copiar skills para Downloads\\claude nem para a pasta de memória daqui. Precisa de uma sessão no DESKTOP ou no NOTEBOOK."]
+  ];
+
+  var FAMS = [
+    ["Windsor.ai", 43, "Relatórios de anúncios, CRM, e-commerce e redes via conector. O servidor do plugin falhou nesta sessão.", ["google-ads", "facebook-ads", "hubspot", "instagram", "youtube"]],
+    ["Meta VR e Horizon OS", 36, "Desenvolvimento para Quest: Unity, Spatial SDK, WebXR, loja. Sem uso previsto na VF.", ["hz-spatial-sdk", "hz-iwsdk-webxr", "hz-store-submit"]],
+    ["Dados e SQL", 10, "Análise, SQL, estatística e gráficos em Python. Úteis só se a VF montar painel de dados.", ["analyze", "build-dashboard", "sql-queries", "validate-data"]],
+    ["Ferramentas do Claude Code", 19, "Revisão de código, atalhos, hooks, plugins, loop, dataviz, artifact-design. Servem ao trabalho, não ao conteúdo.", ["artifact-design", "dataviz", "loop", "update-config", "code-review"]]
+  ];
+  var PLUGFAIL = "Servidores de plugin que falharam nesta sessão (proxy 403, não ausência): Adobe (plugin), marketing (Ahrefs, Amplitude, HubSpot, Klaviyo, Notion, Similarweb, Slack, Supermetrics, Canva, Figma), dados (Amplitude, Atlassian, BigQuery, Definite, Hex), Windsor.ai e Meta VR. Isso é separado dos conectores da conta e pode não se repetir no DESKTOP ou no NOTEBOOK.";
 
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function slug(s) { return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
 
-  var st = { eixo: "", status: "", q: "" };
+  var st = { status: "", q: "" };
 
   function tiles() {
-    var box = document.getElementById("tiles");
-    var counts = {};
+    var box = document.getElementById("tiles"), counts = {}, ok = 0;
     SKILLS.forEach(function (s) { counts[s[1]] = (counts[s[1]] || 0) + 1; });
+    CONNS.forEach(function (c) { if (c[1] === "ok") ok++; });
     Object.keys(STATUS).forEach(function (k) {
-      var t = el("div", "tile");
-      var bar = el("i"); bar.style.background = STATUS[k].cor;
-      t.appendChild(bar);
-      t.appendChild(el("b", null, String(counts[k] || 0)));
+      var t = el("div", "tile"), bar = el("i"); bar.style.background = STATUS[k].cor;
+      t.appendChild(bar); t.appendChild(el("b", null, String(counts[k] || 0)));
       t.appendChild(el("span", null, STATUS[k].nome + " · " + STATUS[k].desc));
       box.appendChild(t);
     });
-    var tot = el("div", "tile");
-    var b2 = el("i"); b2.style.background = "#ece7de"; tot.appendChild(b2);
-    tot.appendChild(el("b", null, String(SKILLS.length)));
-    tot.appendChild(el("span", null, "Cartões individuais abaixo"));
-    box.appendChild(tot);
+    var t2 = el("div", "tile"), b2 = el("i"); b2.style.background = "#8fa4ff";
+    t2.appendChild(b2); t2.appendChild(el("b", null, ok + " de " + CONNS.length));
+    t2.appendChild(el("span", null, "Conectores conectados"));
+    box.appendChild(t2);
   }
 
   function gaps() {
     var box = document.getElementById("gaps");
     GAPS.forEach(function (g) {
-      var d = el("div", "gap");
-      d.appendChild(el("span", "prio " + g[0], "Prioridade " + g[0]));
-      d.appendChild(el("h3", null, g[1]));
-      d.appendChild(el("p", null, g[2]));
+      var d = el("div", "gap"), pr = el("div", "prio " + g[0]);
+      pr.appendChild(el("b", null, "Prioridade " + g[0])); pr.appendChild(el("span", null, g[1]));
+      d.appendChild(pr); d.appendChild(el("h3", null, g[2])); d.appendChild(el("p", null, g[3]));
       box.appendChild(d);
     });
   }
 
-  function chip(parent, label, key, group) {
-    var b = el("button", "chip", label);
-    b.type = "button"; b.id = "chip-" + group + "-" + (key || "todos");
-    b.setAttribute("aria-pressed", st[group] === key ? "true" : "false");
-    b.addEventListener("click", function () { st[group] = key; syncChips(); render(); });
-    parent.appendChild(b);
-  }
-  function syncChips() {
-    ["eixo", "status"].forEach(function (g) {
-      document.querySelectorAll('[id^="chip-' + g + '-"]').forEach(function (b) {
-        var key = b.id.replace("chip-" + g + "-", "");
-        key = key === "todos" ? "" : key;
-        b.setAttribute("aria-pressed", st[g] === key ? "true" : "false");
-      });
+  function toolbar() {
+    var fc = document.getElementById("f-campo"), fs = document.getElementById("f-status");
+    CAMPOS.forEach(function (c) {
+      var a = el("a", "chip", c[0]); a.href = "#campo-" + slug(c[0]); a.id = "go-" + slug(c[0]); fc.appendChild(a);
     });
-  }
-  function filters() {
-    var fe = document.getElementById("f-eixo"), fs = document.getElementById("f-status");
-    chip(fe, "Todos", "", "eixo");
-    EIXOS.forEach(function (e) { chip(fe, e, e, "eixo"); });
-    chip(fs, "Todas", "", "status");
-    Object.keys(STATUS).forEach(function (k) { chip(fs, STATUS[k].nome, k, "status"); });
+    function chip(label, key) {
+      var b = el("button", "chip", label); b.type = "button"; b.id = "chip-status-" + (key || "todas");
+      b.setAttribute("aria-pressed", st.status === key ? "true" : "false");
+      b.addEventListener("click", function () {
+        st.status = key;
+        document.querySelectorAll('[id^="chip-status-"]').forEach(function (x) {
+          var k = x.id.replace("chip-status-", ""); k = k === "todas" ? "" : k;
+          x.setAttribute("aria-pressed", st.status === k ? "true" : "false");
+        });
+        render();
+      });
+      fs.appendChild(b);
+    }
+    chip("Todas", "");
+    Object.keys(STATUS).forEach(function (k) { chip(STATUS[k].nome, k); });
     document.getElementById("q").addEventListener("input", function (ev) { st.q = ev.target.value.toLowerCase().trim(); render(); });
   }
 
+  function card(item, cor, nomeEstado, proposta) {
+    var c = el("div", "card" + (proposta ? " prop" : ""));
+    c.style.setProperty("--c", cor);
+    c.appendChild(el("h3", null, item[3]));
+    c.appendChild(el("span", "nm", item[0]));
+    c.appendChild(el("p", null, item[4]));
+    var m = el("div", "meta"), p1 = el("span", "pill st", nomeEstado); p1.style.setProperty("--c", cor); m.appendChild(p1);
+    item[2].slice(1).forEach(function (e) { m.appendChild(el("span", "pill", "também " + e)); });
+    c.appendChild(m);
+    return c;
+  }
+  function hit(item) { return !st.q || (item[0] + " " + item[3] + " " + item[4]).toLowerCase().indexOf(st.q) >= 0; }
+
   function render() {
-    var grid = document.getElementById("grid");
-    grid.textContent = "";
-    var n = 0;
-    SKILLS.forEach(function (s) {
-      if (st.eixo && s[2].indexOf(st.eixo) < 0) return;
-      if (st.status && s[1] !== st.status) return;
-      if (st.q && (s[0] + " " + s[3]).toLowerCase().indexOf(st.q) < 0) return;
-      n++;
-      var cor = STATUS[s[1]].cor;
-      var c = el("div", "card" + (s[1] === "proposta" ? " prop" : ""));
-      c.style.setProperty("--c", cor);
-      c.appendChild(el("h3", null, s[0]));
-      c.appendChild(el("p", null, s[3]));
-      var m = el("div", "meta");
-      var p1 = el("span", "pill st", STATUS[s[1]].nome); p1.style.setProperty("--c", cor); m.appendChild(p1);
-      s[2].forEach(function (e) { m.appendChild(el("span", "pill", e)); });
-      c.appendChild(m);
-      grid.appendChild(c);
+    var box = document.getElementById("fields"), shown = 0, total = SKILLS.length + CONNS.length;
+    box.textContent = "";
+    CAMPOS.forEach(function (campo) {
+      var sk = SKILLS.filter(function (s) { return s[2][0] === campo[0] && (!st.status || s[1] === st.status) && hit(s); });
+      var cn = CONNS.filter(function (c) { return c[2][0] === campo[0] && !st.status && hit(c); });
+      var allSk = SKILLS.filter(function (s) { return s[2][0] === campo[0]; }).length;
+      var allCn = CONNS.filter(function (c) { return c[2][0] === campo[0]; }).length;
+      var prop = SKILLS.filter(function (s) { return s[2][0] === campo[0] && s[1] === "proposta"; }).length;
+      var sec = el("section", "field"); sec.id = "campo-" + slug(campo[0]);
+      var h = el("div", "field-head");
+      h.appendChild(el("h2", null, campo[0])); h.appendChild(el("p", null, campo[1]));
+      h.appendChild(el("div", "nums", allSk + " skills · " + allCn + " conectores · " + prop + " ainda por criar"));
+      sec.appendChild(h);
+      if (sk.length) {
+        sec.appendChild(el("div", "grp", "Skills"));
+        var g1 = el("div", "grid");
+        sk.forEach(function (s) { g1.appendChild(card(s, STATUS[s[1]].cor, STATUS[s[1]].nome, s[1] === "proposta")); });
+        sec.appendChild(g1);
+      }
+      if (cn.length) {
+        sec.appendChild(el("div", "grp", "Conectores"));
+        var g2 = el("div", "grid");
+        cn.forEach(function (c) { g2.appendChild(card(c, CSTATE[c[1]].cor, CSTATE[c[1]].nome, false)); });
+        sec.appendChild(g2);
+      }
+      if (!sk.length && !cn.length) sec.appendChild(el("p", "note", "Nada neste campo com esse filtro."));
+      shown += sk.length + cn.length;
+      box.appendChild(sec);
     });
-    document.getElementById("count").textContent = n + " de " + SKILLS.length;
-    if (!n) grid.appendChild(el("p", "sub", "Nenhuma skill com esse filtro. Tire um filtro ou mude a busca."));
+    document.getElementById("count").textContent = shown + " de " + total + " itens";
   }
 
   function fams() {
     var box = document.getElementById("fam");
     FAMS.forEach(function (f) {
       var d = el("div", "famcard");
-      d.appendChild(el("h3", null, f[0]));
-      d.appendChild(el("b", null, String(f[1])));
-      d.appendChild(el("p", null, f[2]));
-      var ch = el("div", "chips");
-      f[3].forEach(function (x) { ch.appendChild(el("span", null, x)); });
-      d.appendChild(ch);
-      box.appendChild(d);
+      d.appendChild(el("h3", null, f[0])); d.appendChild(el("b", null, String(f[1]))); d.appendChild(el("p", null, f[2]));
+      var ch = el("div", "chips"); f[3].forEach(function (x) { ch.appendChild(el("span", null, x)); });
+      d.appendChild(ch); box.appendChild(d);
     });
-  }
-
-  function conns() {
-    var box = document.getElementById("conn"), sum = document.getElementById("conn-sum"), cnt = {};
-    CONNS.forEach(function (c) {
-      cnt[c[1]] = (cnt[c[1]] || 0) + 1;
-      var cor = CSTATE[c[1]].cor;
-      var d = el("div", "card");
-      d.style.setProperty("--c", cor);
-      d.appendChild(el("h3", null, c[0]));
-      d.appendChild(el("p", null, c[3]));
-      var m = el("div", "meta");
-      var p1 = el("span", "pill st", CSTATE[c[1]].nome); p1.style.setProperty("--c", cor); m.appendChild(p1);
-      c[2].forEach(function (e2) { m.appendChild(el("span", "pill", e2)); });
-      d.appendChild(m);
-      box.appendChild(d);
-    });
-    sum.textContent = (cnt.ok || 0) + " conectados · " + (cnt.inc || 0) + " com conexão incompleta · " + (cnt.nao || 0) + " não conectado · " + (cnt.sessao || 0) + " só desta sessão.";
     document.getElementById("plugfail").textContent = PLUGFAIL;
   }
 
-  tiles(); gaps(); filters(); render(); fams(); conns();
+  tiles(); gaps(); toolbar(); render(); fams();
 })();
 </script>
