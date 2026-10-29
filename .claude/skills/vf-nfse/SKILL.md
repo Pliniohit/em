@@ -19,7 +19,7 @@ Skill financeira da Visões Filmes (VF). Cuida da nota fiscal de serviço do com
 2. **O CNAE ou o objeto social cobre o serviço?** Ver `references/codigos-e-regras.md`. Serviço de mídias sociais e publicidade sai pela LTDA, não pelo MEI.
 3. **Calcular o valor.** Rodar `python3 -I scripts/calcular_nota.py --custo <valor>` (alíquota padrão 6,15%). Mostrar o custo, a alíquota, o valor da nota e o imposto embutido.
 4. **Escolher código e emissor.** Item 12 só no Emissor Nacional, com o grupo Evento. Ver tabela abaixo.
-5. **Montar a descrição** sem acento e sem travessão, em ASCII puro. Exemplo: `Operacao de projecao mapeada - evento X, 2 diarias, junho de 2026` (sem o hífen: usar vírgula ou dois pontos).
+5. **Montar a descrição** sem acento e sem travessão, em ASCII puro. Exemplo: `Operacao de projecao mapeada no evento X, 2 diarias, junho de 2026`. Usar vírgula ou dois pontos, nunca travessão.
 6. **Conferir antes de entregar** (checklist abaixo).
 7. **Entregar o rascunho** à Crisia, dizer em que passo ela clica e o que conferir depois (aba "Notas Emitidas").
 8. **Se for MEI:** somar a nota ao acumulado do ano e rodar `--mei-acumulado <total> --nota <valor>`. Alertar a 75%, 90% e 100% do teto.

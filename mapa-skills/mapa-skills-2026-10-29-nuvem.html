@@ -207,7 +207,7 @@ footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--pap
 
     ["vf-buscador", "repo", [K, O], "Busca e avalia novas skills com filtro de segurança", "Nunca instala sozinha. Rotina semanal desligada."],
 
-    ["vf-nfse", "proposta", [P], "Calcula e confere notas fiscais", "Custo ÷ (1 − alíquota), regras do Emissor Nacional, erros de emissão e teto do MEI. Base achada no Drive. Prioridade alta."],
+    ["vf-nfse", "repo", [P], "Calcula e confere notas fiscais", "Escrita em 29/10 com calculadora testada, códigos, erros de emissão e teto do MEI. Nunca emite. Falta instalar na conta."],
     ["vf-orcamento", "proposta", [P], "Monta orçamento e conduz a negociação", "Diárias, logística, piso, projeto fechado, parcelamento 50/50. Prioridade alta."],
     ["colmeia", "proposta", [O], "Sincroniza a memória entre as máquinas", "Palavra-chave \"verifique colmeia\", um MD por máquina, diário só com acréscimo. Prioridade média."],
     ["vf-visual", "proposta", [C, CR], "Faz mapas e painéis no padrão da VF", "HTML escuro com serifa, artifact mais fonte fora do temporário. Prioridade média."],
@@ -237,7 +237,7 @@ footer strong { font-family: var(--display); font-size: 1.1rem; color: var(--pap
   ];
 
   var GAPS = [
-    ["alta", P, "Financeiro e NFS-e sem skill", "Regras de nota, alíquota e teto do MEI vivem só nas preferências e num handoff do Drive. Propostas: vf-nfse e vf-orcamento."],
+    ["alta", P, "Orçamento ainda sem skill, e vf-nfse sem instalar", "A vf-nfse está escrita e testada, mas só vale neste repositório. O orçamento (diárias, piso, parcelamento) vive só nas preferências. Falta criar a vf-orcamento."],
     ["alta", K, "vf-buscador não está instalada", "Existe no branch, mas só vale para sessões neste repositório. Falta instalar na conta e rodar a primeira busca manual antes de ligar a rotina."],
     ["alta", K, "Núcleo criativo sem ID", "A busca de conhecimento da VF depende do ID da pasta no Drive. Ninguém passou ainda, e não vou chutar caminho."],
     ["media", C, "Nada para Resolume, TouchDesigner e MadMapper", "Projeção mapeada e VJ não têm skill. Também não há playbook de prompts para Higgsfield e Magnific: só os conectores."],
